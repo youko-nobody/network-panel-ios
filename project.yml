@@ -34,3 +34,16 @@ targets:
         CODE_SIGNING_ALLOWED: NO
         CODE_SIGNING_REQUIRED: NO
         CODE_SIGN_IDENTITY: ""
+schemes:
+  NetworkPanel:
+    build:
+      targets:
+        NetworkPanel: all
+    run:
+      config: Debug
+    archive:
+      config: Release
+    profile:
+      config: Release
+    analyze:
+      config: Debug
