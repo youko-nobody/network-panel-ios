@@ -1,0 +1,121 @@
+import Foundation
+
+@MainActor
+final class AppStore: ObservableObject {
+    @Published var routes: [TrafficRoute] = [] {
+        didSet { saveRoutes() }
+    }
+    @Published var selectedRouteID: UUID? {
+        didSet { saveSelectedRoute() }
+    }
+    @Published var selectedThemeID: String = AppTheme.all[0].id {
+        didSet { UserDefaults.standard.set(selectedThemeID, forKey: Keys.themeID) }
+    }
+    @Published var enhancedConcurrency = true {
+        didSet { UserDefaults.standard.set(enhancedConcurrency, forKey: Keys.enhancedConcurrency) }
+    }
+    @Published var trafficLimitBytes: Int64 = 0 {
+        didSet { UserDefaults.standard.set(trafficLimitBytes, forKey: Keys.trafficLimitBytes) }
+    }
+    @Published var rateLimitMbps: Int = 0 {
+        didSet { UserDefaults.standard.set(rateLimitMbps, forKey: Keys.rateLimitMbps) }
+    }
+    @Published var totalBytes: Int64 = 0 {
+        didSet { UserDefaults.standard.set(totalBytes, forKey: Keys.totalBytes) }
+    }
+
+    var currentTheme: AppTheme {
+        AppTheme.all.first { $0.id == selectedThemeID } ?? AppTheme.all[0]
+    }
+
+    var selectedRoute: TrafficRoute? {
+        if let id = selectedRouteID, let route = routes.first(where: { $0.id == id }) {
+            return route
+        }
+        return routes.first
+    }
+
+    init() {
+        load()
+    }
+
+    func cycleTheme() {
+        let currentIndex = AppTheme.all.firstIndex { $0.id == selectedThemeID } ?? 0
+        selectedThemeID = AppTheme.all[(currentIndex + 1) % AppTheme.all.count].id
+    }
+
+    func select(route: TrafficRoute) {
+        selectedRouteID = route.id
+    }
+
+    func addRoute(name: String, url: String) {
+        let route = TrafficRoute(name: name, url: url)
+        routes.append(route)
+        selectedRouteID = route.id
+    }
+
+    func updateRoute(_ route: TrafficRoute) {
+        guard let index = routes.firstIndex(where: { $0.id == route.id }) else { return }
+        routes[index] = route
+    }
+
+    func deleteRoute(_ route: TrafficRoute) {
+        routes.removeAll { $0.id == route.id }
+        if selectedRouteID == route.id {
+            selectedRouteID = routes.first?.id
+        }
+    }
+
+    func addTotalBytes(_ bytes: Int64) {
+        guard bytes > 0 else { return }
+        totalBytes += bytes
+    }
+
+    func resetTotalBytes() {
+        totalBytes = 0
+    }
+
+    private func load() {
+        selectedThemeID = UserDefaults.standard.string(forKey: Keys.themeID) ?? AppTheme.all[0].id
+        enhancedConcurrency = UserDefaults.standard.object(forKey: Keys.enhancedConcurrency) as? Bool ?? true
+        trafficLimitBytes = Int64(UserDefaults.standard.object(forKey: Keys.trafficLimitBytes) as? Int ?? 0)
+        rateLimitMbps = UserDefaults.standard.integer(forKey: Keys.rateLimitMbps)
+        totalBytes = Int64(UserDefaults.standard.object(forKey: Keys.totalBytes) as? Int ?? 0)
+
+        if let data = UserDefaults.standard.data(forKey: Keys.routes),
+           let decoded = try? JSONDecoder().decode([TrafficRoute].self, from: data) {
+            routes = decoded
+        }
+        if routes.isEmpty {
+            routes = [
+                TrafficRoute(name: "Cloudflare", url: "https://speed.cloudflare.com/__down?bytes=100000000", threads: 4)
+            ]
+        }
+        if let selectedString = UserDefaults.standard.string(forKey: Keys.selectedRouteID),
+           let id = UUID(uuidString: selectedString),
+           routes.contains(where: { $0.id == id }) {
+            selectedRouteID = id
+        } else {
+            selectedRouteID = routes.first?.id
+        }
+    }
+
+    private func saveRoutes() {
+        guard let data = try? JSONEncoder().encode(routes) else { return }
+        UserDefaults.standard.set(data, forKey: Keys.routes)
+    }
+
+    private func saveSelectedRoute() {
+        UserDefaults.standard.set(selectedRouteID?.uuidString, forKey: Keys.selectedRouteID)
+    }
+
+    private enum Keys {
+        static let routes = "routes"
+        static let selectedRouteID = "selected_route_id"
+        static let themeID = "theme_id"
+        static let enhancedConcurrency = "enhanced_concurrency"
+        static let trafficLimitBytes = "traffic_limit_bytes"
+        static let rateLimitMbps = "rate_limit_mbps"
+        static let totalBytes = "total_bytes"
+    }
+}

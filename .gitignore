@@ -1,0 +1,11 @@
+.DS_Store
+DerivedData/
+build/
+NetworkPanel.xcodeproj/project.xcworkspace/
+*.xcodeproj/xcuserdata/
+*.xcuserstate
+*.ipa
+*.dSYM
+*.xcarchive
+*.log
+*.tmp
