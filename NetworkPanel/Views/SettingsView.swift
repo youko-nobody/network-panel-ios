@@ -14,6 +14,12 @@ struct SettingsView: View {
                 Form {
                     Section("运行") {
                         Toggle("增强并发", isOn: $store.enhancedConcurrency)
+                        Stepper(value: Binding(
+                            get: { store.threadCount },
+                            set: { store.updateThreadCount($0) }
+                        ), in: 1...64, step: 1) {
+                            Text("线程数 \(store.threadCount)")
+                        }
                         Stepper("速率上限 \(store.rateLimitMbps == 0 ? "不限" : "\(store.rateLimitMbps) Mbps")", value: $store.rateLimitMbps, in: 0...10000, step: 10)
                     }
 

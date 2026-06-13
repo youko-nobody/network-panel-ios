@@ -25,7 +25,7 @@ final class TrafficRunner: ObservableObject {
         lastRateBytes = sessionBytes
         lastRateTime = Date()
 
-        let workerCount = store.enhancedConcurrency ? route.threads : 1
+        let workerCount = store.enhancedConcurrency ? store.threadCount : 1
         for _ in 0..<max(1, workerCount) {
             let task = Task.detached(priority: .utility) { [weak self] in
                 guard let self else { return }

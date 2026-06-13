@@ -1,31 +1,31 @@
-# Release Guide
+# 发布指南
 
-This repository can generate an unsigned IPA through GitHub Actions.
-That IPA is intended for self-signing or sideloading workflows.
+这个仓库会通过 GitHub Actions 自动生成未签名 IPA。
+生成的 IPA 适合自签或侧载使用。
 
-## Unsigned IPA
+## 未签名 IPA
 
-Push a tag:
+推送版本标签：
 
 ```powershell
-git tag v0.1.7
+git tag v0.1.8
 git push origin main
-git push origin v0.1.7
+git push origin v0.1.8
 ```
 
-Actions will upload:
+Actions 会上传：
 
 ```text
-network-panel-ios-v0.1.7-unsigned.ipa
+network-panel-ios-v0.1.8-unsigned.ipa
 ```
 
-## Signed IPA later
+## 后续自动签名
 
-If you want automatic signing in Actions later, add Apple signing assets as GitHub Secrets and extend the workflow:
+如果后续想在 Actions 里自动签名，需要把 Apple 签名材料加入 GitHub Secrets，并扩展工作流：
 
-- Apple certificate `.p12`
-- certificate password
+- Apple 证书 `.p12`
+- 证书密码
 - provisioning profile
-- bundle identifier mapping
+- bundle identifier 映射
 
-The current repository intentionally does not include private signing material.
+当前仓库不会包含任何私人签名材料。

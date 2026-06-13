@@ -50,6 +50,10 @@ jobs:
         run: |
           APP_PATH="$(find DerivedData/Build/Products/Release-iphoneos -name 'NetworkPanel.app' -type d | head -n 1)"
           test -n "$APP_PATH"
+          /usr/libexec/PlistBuddy -c "Print CFBundleDisplayName" "$APP_PATH/Info.plist"
+          /usr/libexec/PlistBuddy -c "Print CFBundleName" "$APP_PATH/Info.plist"
+          /usr/libexec/PlistBuddy -c "Print UIDeviceFamily" "$APP_PATH/Info.plist"
+          /usr/libexec/PlistBuddy -c "Print UIRequiresFullScreen" "$APP_PATH/Info.plist"
           mkdir -p Payload
           cp -R "$APP_PATH" Payload/
           zip -r network-panel-ios-${{ github.ref_name }}-unsigned.ipa Payload
@@ -58,14 +62,14 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: network-panel-ios-${{ github.ref_name }}-unsigned.ipa
-          name: network-panel-ios ${{ github.ref_name }}
+          name: 网络面板 iOS ${{ github.ref_name }}
           body: |
-            Native SwiftUI build for iPhone and iPad.
+            网络面板 iPhone / iPad 原生 SwiftUI 版本。
 
-            Asset:
+            下载文件：
             - network-panel-ios-${{ github.ref_name }}-unsigned.ipa
 
-            This IPA is unsigned. Use your own self-signing or sideloading tool before installing it on iPhone or iPad.
+            这是未签名 IPA，请使用你自己的自签或侧载工具签名后安装到 iPhone / iPad。
 
       - name: Upload xcodebuild log
         if: always()

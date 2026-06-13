@@ -9,7 +9,7 @@ struct ChipButtonStyle: ButtonStyle {
             .font(.system(size: 15, weight: .heavy))
             .foregroundStyle(theme.primary.color)
             .lineLimit(1)
-            .minimumScaleFactor(0.7)
+            .minimumScaleFactor(0.55)
             .frame(minWidth: minWidth, minHeight: 46)
             .padding(.horizontal, 12)
             .background(RoundedRectangle(cornerRadius: 18, style: .continuous).fill(theme.chip.color).overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).stroke(theme.line.color)))

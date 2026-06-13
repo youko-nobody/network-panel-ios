@@ -21,6 +21,9 @@ final class AppStore: ObservableObject {
     @Published var enhancedConcurrency = true {
         didSet { UserDefaults.standard.set(enhancedConcurrency, forKey: Keys.enhancedConcurrency) }
     }
+    @Published var threadCount: Int = 4 {
+        didSet { UserDefaults.standard.set(Self.clampedThreads(threadCount), forKey: Keys.threadCount) }
+    }
     @Published var trafficLimitBytes: Int64 = 0 {
         didSet { UserDefaults.standard.set(trafficLimitBytes, forKey: Keys.trafficLimitBytes) }
     }
@@ -63,7 +66,29 @@ final class AppStore: ObservableObject {
 
     func updateRoute(_ route: TrafficRoute) {
         guard let index = routes.firstIndex(where: { $0.id == route.id }) else { return }
-        routes[index] = route
+        var updatedRoutes = routes
+        updatedRoutes[index] = route
+        routes = updatedRoutes
+        if selectedRouteID == route.id {
+            threadCount = Self.clampedThreads(route.threads)
+        }
+    }
+
+    func updateSelectedRouteThreads(_ threads: Int) {
+        updateThreadCount(threads)
+    }
+
+    func updateThreadCount(_ threads: Int) {
+        let clamped = Self.clampedThreads(threads)
+        threadCount = clamped
+        guard let route = selectedRoute,
+              let index = routes.firstIndex(where: { $0.id == route.id }) else { return }
+        var updatedRoute = route
+        updatedRoute.threads = clamped
+        var updatedRoutes = routes
+        updatedRoutes[index] = updatedRoute
+        routes = updatedRoutes
+        selectedRouteID = updatedRoute.id
     }
 
     func deleteRoute(_ route: TrafficRoute) {
@@ -103,6 +128,9 @@ final class AppStore: ObservableObject {
         } else {
             selectedRouteID = routes.first?.id
         }
+
+        let savedThreads = UserDefaults.standard.object(forKey: Keys.threadCount) as? Int
+        threadCount = Self.clampedThreads(savedThreads ?? selectedRoute?.threads ?? Self.defaultRoute.threads)
     }
 
     private func saveRoutes() {
@@ -119,11 +147,16 @@ final class AppStore: ObservableObject {
         return route.name == "Cloudflare" && route.url.contains("speed.cloudflare.com")
     }
 
+    private static func clampedThreads(_ value: Int) -> Int {
+        max(1, min(64, value))
+    }
+
     private enum Keys {
         static let routes = "routes"
         static let selectedRouteID = "selected_route_id"
         static let themeID = "theme_id"
         static let enhancedConcurrency = "enhanced_concurrency"
+        static let threadCount = "thread_count"
         static let trafficLimitBytes = "traffic_limit_bytes"
         static let rateLimitMbps = "rate_limit_mbps"
         static let totalBytes = "total_bytes"

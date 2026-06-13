@@ -7,77 +7,131 @@ struct ContentView: View {
     @State private var showingSettings = false
     @State private var showingThemes = false
     @State private var showingRoutes = false
+    @State private var showingThreads = false
 
     var body: some View {
         let theme = store.currentTheme
-        NavigationStack {
-            ZStack {
-                LinearGradient(colors: [theme.backgroundTop.color, theme.backgroundBottom.color], startPoint: .top, endPoint: .bottom)
-                    .ignoresSafeArea()
+        GeometryReader { proxy in
+            let wideLayout = proxy.size.width >= 760
+            NavigationStack {
+                ZStack {
+                    LinearGradient(colors: [theme.backgroundTop.color, theme.backgroundBottom.color], startPoint: .top, endPoint: .bottom)
+                        .ignoresSafeArea()
 
-                ScrollView {
-                    VStack(spacing: 14) {
-                        header(theme)
-                        SpeedHero(theme: theme)
-                        ControlDeck(theme: theme, showingRoutes: $showingRoutes)
-                        if latencyMonitor.isChecking || !latencyMonitor.results.isEmpty {
-                            RegionLatencyCard(theme: theme)
+                    ScrollView {
+                        VStack(spacing: 16) {
+                            header(theme)
+                            if wideLayout {
+                                HStack(alignment: .top, spacing: 16) {
+                                    VStack(spacing: 16) {
+                                        SpeedHero(theme: theme)
+                                    }
+                                    .frame(maxWidth: .infinity)
+
+                                    VStack(spacing: 16) {
+                                        ControlDeck(theme: theme, showingRoutes: $showingRoutes, showingThreads: $showingThreads)
+                                        if latencyMonitor.isChecking || !latencyMonitor.results.isEmpty {
+                                            RegionLatencyCard(theme: theme)
+                                        }
+                                    }
+                                    .frame(maxWidth: .infinity)
+                                }
+                            } else {
+                                VStack(spacing: 14) {
+                                    SpeedHero(theme: theme)
+                                    ControlDeck(theme: theme, showingRoutes: $showingRoutes, showingThreads: $showingThreads)
+                                    if latencyMonitor.isChecking || !latencyMonitor.results.isEmpty {
+                                        RegionLatencyCard(theme: theme)
+                                    }
+                                }
+                            }
                         }
+                        .frame(maxWidth: wideLayout ? 1120 : 560)
+                        .padding(.horizontal, wideLayout ? 24 : 16)
+                        .padding(.bottom, 24)
+                        .frame(maxWidth: .infinity)
                     }
-                    .padding(.horizontal, 16)
-                    .padding(.bottom, 24)
                 }
-            }
-            .toolbar(.hidden, for: .navigationBar)
-            .sheet(isPresented: $showingSettings) {
-                SettingsView()
-                    .environmentObject(store)
-                    .environmentObject(runner)
-                    .environmentObject(latencyMonitor)
-            }
-            .sheet(isPresented: $showingThemes) {
-                ThemePickerView()
-                    .environmentObject(store)
-            }
-            .sheet(isPresented: $showingRoutes) {
-                RoutePickerView()
-                    .environmentObject(store)
-            }
-            .task {
-                latencyMonitor.start()
-            }
-            .onDisappear {
-                latencyMonitor.stop()
+                .toolbar(.hidden, for: .navigationBar)
+                .sheet(isPresented: $showingSettings) {
+                    SettingsView()
+                        .environmentObject(store)
+                        .environmentObject(runner)
+                        .environmentObject(latencyMonitor)
+                }
+                .sheet(isPresented: $showingThemes) {
+                    ThemePickerView()
+                        .environmentObject(store)
+                }
+                .sheet(isPresented: $showingRoutes) {
+                    RoutePickerView()
+                        .environmentObject(store)
+                }
+                .sheet(isPresented: $showingThreads) {
+                    ThreadSettingsView()
+                        .environmentObject(store)
+                }
+                .task {
+                    latencyMonitor.start()
+                }
+                .onDisappear {
+                    latencyMonitor.stop()
+                }
             }
         }
     }
 
     private func header(_ theme: AppTheme) -> some View {
-        HStack(spacing: 10) {
-            Text("网络面板")
-                .font(.system(size: 24, weight: .heavy))
-                .foregroundStyle(theme.text.color)
-
-            Spacer()
-
-            Button(store.currentTheme.name) {
-                store.cycleTheme()
+        ViewThatFits(in: .horizontal) {
+            HStack(spacing: 10) {
+                headerTitle(theme)
+                Spacer(minLength: 12)
+                themeSwitchButton(theme, minWidth: 152)
+                settingsButton(theme)
             }
-            .contextMenu {
-                ForEach(AppTheme.all) { option in
-                    Button(option.name) {
-                        store.selectedThemeID = option.id
-                    }
+
+            VStack(spacing: 10) {
+                HStack(spacing: 10) {
+                    headerTitle(theme)
+                    Spacer()
+                    settingsButton(theme)
+                }
+                HStack {
+                    Spacer()
+                    themeSwitchButton(theme, minWidth: 168)
                 }
             }
-            .buttonStyle(ChipButtonStyle(theme: theme, minWidth: 118))
-
-            Button("设置") {
-                showingSettings = true
-            }
-            .buttonStyle(ChipButtonStyle(theme: theme, minWidth: 58))
         }
         .padding(.top, 14)
+    }
+
+    private func headerTitle(_ theme: AppTheme) -> some View {
+        Text("网络面板")
+            .font(.system(size: 30, weight: .heavy))
+            .foregroundStyle(theme.text.color)
+            .lineLimit(1)
+            .minimumScaleFactor(0.8)
+    }
+
+    private func themeSwitchButton(_ theme: AppTheme, minWidth: CGFloat) -> some View {
+        Button(store.currentTheme.name) {
+            store.cycleTheme()
+        }
+        .contextMenu {
+            ForEach(AppTheme.all) { option in
+                Button(option.name) {
+                    store.selectedThemeID = option.id
+                }
+            }
+        }
+        .buttonStyle(ChipButtonStyle(theme: theme, minWidth: minWidth))
+    }
+
+    private func settingsButton(_ theme: AppTheme) -> some View {
+        Button("设置") {
+            showingSettings = true
+        }
+        .buttonStyle(ChipButtonStyle(theme: theme, minWidth: 58))
     }
 }
 
@@ -155,6 +209,7 @@ struct ControlDeck: View {
     @EnvironmentObject private var runner: TrafficRunner
     let theme: AppTheme
     @Binding var showingRoutes: Bool
+    @Binding var showingThreads: Bool
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
@@ -175,8 +230,8 @@ struct ControlDeck: View {
                 ControlTile(title: "线路", value: store.selectedRoute?.displayName ?? "暂无线路", action: "选择", theme: theme) {
                     showingRoutes = true
                 }
-                ControlTile(title: "线程", value: "\(store.selectedRoute?.threads ?? 0) 线程", action: "设置", theme: theme) {
-                    showingRoutes = true
+                ControlTile(title: "线程", value: "\(store.threadCount) 线程", action: "设置", theme: theme) {
+                    showingThreads = true
                 }
             }
 
