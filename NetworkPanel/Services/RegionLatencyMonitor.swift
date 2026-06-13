@@ -7,10 +7,18 @@ struct RegionLatencyResult: Identifiable, Equatable, Sendable {
         case foreign
     }
 
-    let id = UUID()
     let kind: Kind
     let label: String
     let latencyMillis: Int
+
+    var id: String {
+        switch kind {
+        case .domestic:
+            return "domestic"
+        case .foreign:
+            return "foreign"
+        }
+    }
 }
 
 @MainActor
@@ -71,17 +79,17 @@ final class RegionLatencyMonitor: ObservableObject {
         return RegionLatencyResult(kind: .foreign, label: label, latencyMillis: trace.latencyMillis)
     }
 
-    private func fetchIPInfo(ip: String?) async -> [String: Any]? {
+    private func fetchIPInfo(ip: String?) async -> IPInfoData? {
         var urlString = ipInfoURL
         if let ip, let encoded = ip.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) {
             urlString += "?ip=\(encoded)"
         }
         guard let result = await fetchText(urlString: urlString, method: "GET", timeout: 3.5),
               let data = result.body.data(using: .utf8),
-              let root = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+              let root = try? JSONDecoder().decode(IPInfoResponse.self, from: data) else {
             return nil
         }
-        return root["data"] as? [String: Any]
+        return root.data
     }
 
     private func measureLatency(urlString: String, method: String, timeout: TimeInterval) async -> Int? {
@@ -128,31 +136,29 @@ final class RegionLatencyMonitor: ObservableObject {
             .trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
-    private func countryCode(_ info: [String: Any]) -> String {
-        (info["country"] as? [String: Any])?["code"] as? String ?? ""
+    private func countryCode(_ info: IPInfoData) -> String {
+        info.country?.code ?? ""
     }
 
-    private func buildLabel(info: [String: Any], foreign: Bool) -> String {
+    private func buildLabel(info: IPInfoData, foreign: Bool) -> String {
         var parts: [String] = []
-        if foreign, let country = info["country"] as? [String: Any] {
-            append(country["name"] as? String, to: &parts)
+        if foreign {
+            append(info.country?.name, to: &parts)
         }
-        if !appendArray(info["regions_short"], to: &parts) {
-            _ = appendArray(info["regions"], to: &parts)
+        if !appendArray(info.regionsShort, to: &parts) {
+            _ = appendArray(info.regions, to: &parts)
         }
-        if let asInfo = info["as"] as? [String: Any] {
-            append(asInfo["info"] as? String, to: &parts)
-            append(asInfo["name"] as? String, to: &parts)
-        }
+        append(info.asInfo?.info, to: &parts)
+        append(info.asInfo?.name, to: &parts)
         return parts.prefix(3).joined(separator: " ")
     }
 
     @discardableResult
-    private func appendArray(_ value: Any?, to parts: inout [String]) -> Bool {
-        guard let values = value as? [Any] else { return false }
+    private func appendArray(_ values: [String]?, to parts: inout [String]) -> Bool {
+        guard let values else { return false }
         let before = parts.count
         for item in values {
-            append(item as? String, to: &parts)
+            append(item, to: &parts)
         }
         return parts.count > before
     }
@@ -165,4 +171,32 @@ final class RegionLatencyMonitor: ObservableObject {
         }
         parts.append(value)
     }
+}
+
+private struct IPInfoResponse: Decodable, Sendable {
+    let data: IPInfoData?
+}
+
+private struct IPInfoData: Decodable, Sendable {
+    let country: IPInfoCountry?
+    let regions: [String]?
+    let regionsShort: [String]?
+    let asInfo: IPInfoAS?
+
+    enum CodingKeys: String, CodingKey {
+        case country
+        case regions
+        case regionsShort = "regions_short"
+        case asInfo = "as"
+    }
+}
+
+private struct IPInfoCountry: Decodable, Sendable {
+    let code: String?
+    let name: String?
+}
+
+private struct IPInfoAS: Decodable, Sendable {
+    let name: String?
+    let info: String?
 }

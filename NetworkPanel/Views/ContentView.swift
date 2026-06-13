@@ -43,7 +43,8 @@ struct ContentView: View {
             }
             .task {
                 latencyMonitor.start()
-            }.onDisappear {
+            }
+            .onDisappear {
                 latencyMonitor.stop()
             }
         }
