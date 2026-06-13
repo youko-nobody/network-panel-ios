@@ -20,7 +20,9 @@ struct ContentView: View {
                         header(theme)
                         SpeedHero(theme: theme)
                         ControlDeck(theme: theme, showingRoutes: $showingRoutes)
-                        RegionLatencyCard(theme: theme)
+                        if latencyMonitor.isChecking || !latencyMonitor.results.isEmpty {
+                            RegionLatencyCard(theme: theme)
+                        }
                     }
                     .padding(.horizontal, 16)
                     .padding(.bottom, 24)
@@ -214,12 +216,12 @@ struct RegionLatencyCard: View {
                 }
             }
 
-            if latencyMonitor.results.isEmpty {
-                Text(latencyMonitor.isChecking ? "正在检测" : "暂未检测到可用地区")
+            if latencyMonitor.results.isEmpty && latencyMonitor.isChecking {
+                Text("正在检测")
                     .font(.system(size: 14, weight: .semibold))
                     .foregroundStyle(theme.muted.color)
                     .frame(maxWidth: .infinity, alignment: .leading)
-            } else {
+            } else if !latencyMonitor.results.isEmpty {
                 VStack(spacing: 10) {
                     ForEach(latencyMonitor.results) { result in
                         LatencyResultRow(result: result, theme: theme)
