@@ -28,7 +28,8 @@ final class TrafficRunner: ObservableObject {
         let workerCount = store.enhancedConcurrency ? route.threads : 1
         for _ in 0..<max(1, workerCount) {
             let task = Task.detached(priority: .utility) { [weak self] in
-                await self?.runWorker(route: route)
+                guard let self else { return }
+                await self.runWorker(route: route)
             }
             tasks.append(task)
         }
@@ -36,7 +37,7 @@ final class TrafficRunner: ObservableObject {
         rateTask = Task { [weak self] in
             while !(Task.isCancelled) {
                 try? await Task.sleep(nanoseconds: 1_000_000_000)
-                await self?.updateRate()
+                self?.updateRate()
             }
         }
     }
@@ -84,7 +85,7 @@ final class TrafficRunner: ObservableObject {
                 request.setValue("identity", forHTTPHeaderField: "Accept-Encoding")
                 let (bytes, _) = try await URLSession.shared.bytes(for: request)
                 var localCount: Int64 = 0
-                for try await byte in bytes {
+                for try await _ in bytes {
                     if Task.isCancelled { break }
                     localCount += 1
                     if localCount >= 32_768 {
