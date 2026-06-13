@@ -38,11 +38,9 @@ jobs:
           status=${PIPESTATUS[0]}
           if [ "$status" -ne 0 ]; then
             tail -n 160 xcodebuild.log > xcodebuild-tail.log
-            {
-              echo "::error title=Xcode build failed::Last 160 lines of xcodebuild.log follow."
-              sed 's/%/%25/g; s/\r/%0D/g; s/$/%0A/g' xcodebuild-tail.log | tr -d '\n'
-              echo
-            }
+            echo "===== XCODEBUILD LOG TAIL START ====="
+            cat xcodebuild-tail.log
+            echo "===== XCODEBUILD LOG TAIL END ====="
             exit "$status"
           fi
 
