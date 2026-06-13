@@ -1,38 +1,26 @@
 # network-panel-ios
 
-Network Panel's native SwiftUI build for iPhone and iPad.
-This repository is meant for builds outside the App Store and is designed to produce a self-signable iOS / iPadOS app.
+Network Panel 的 iPhone / iPad 原生 SwiftUI 版本。
 
-## Current scope
+## 特点
 
-- Native SwiftUI UI
-- iPhone and iPad support
-- Foreground traffic runner
-- Route management and theme switching
-- GitHub Actions build on macOS runners
+- 中文界面
+- 默认线路：移动云盘
+- 支持多主题切换
+- 支持 iPad 分屏
+- 支持地区延迟检测
+- 支持 GitHub Actions 生成 unsigned IPA
 
-## Important limit
+## 默认线路
 
-iPadOS background execution is tightly limited. This first version does not promise stable long-running traffic with the screen locked. Foreground testing is the primary path.
+- 名称：移动云盘
+- 地址：https://yun.mcloud.139.com/hongseyunpan/2.43G.zip
 
-## GitHub build
+## 发布
 
-After pushing a tag, Actions will:
+仓库通过 GitHub Actions 自动构建。
+推送 `v*` 标签后，会在 Release 里生成 unsigned IPA。
 
-1. Install XcodeGen
-2. Generate the Xcode project
-3. Build with `xcodebuild`
-4. Package an unsigned IPA
-5. Upload the artifact and create a GitHub Release
+## 说明
 
-## Local Mac build
-
-```bash
-brew install xcodegen
-xcodegen generate
-xcodebuild -project NetworkPanel.xcodeproj -scheme NetworkPanel -configuration Release -sdk iphoneos CODE_SIGNING_ALLOWED=NO build
-```
-
-## Safety
-
-Do not commit certificates, keys, provisioning profiles, signed artifacts, or personal screenshots.
+这是用于自签和侧载的构建，不包含 App Store 提交流程。

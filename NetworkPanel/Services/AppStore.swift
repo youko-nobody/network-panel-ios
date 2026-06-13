@@ -3,6 +3,12 @@ import Combine
 
 @MainActor
 final class AppStore: ObservableObject {
+    private static let defaultRoute = TrafficRoute(
+        name: "移动云盘",
+        url: "https://yun.mcloud.139.com/hongseyunpan/2.43G.zip",
+        threads: 4
+    )
+
     @Published var routes: [TrafficRoute] = [] {
         didSet { saveRoutes() }
     }
@@ -87,10 +93,8 @@ final class AppStore: ObservableObject {
            let decoded = try? JSONDecoder().decode([TrafficRoute].self, from: data) {
             routes = decoded
         }
-        if routes.isEmpty {
-            routes = [
-                TrafficRoute(name: "Cloudflare", url: "https://speed.cloudflare.com/__down?bytes=100000000", threads: 4)
-            ]
+        if routes.isEmpty || isLegacyDefaultOnly(routes) {
+            routes = [Self.defaultRoute]
         }
         if let selectedString = UserDefaults.standard.string(forKey: Keys.selectedRouteID),
            let id = UUID(uuidString: selectedString),
@@ -108,6 +112,11 @@ final class AppStore: ObservableObject {
 
     private func saveSelectedRoute() {
         UserDefaults.standard.set(selectedRouteID?.uuidString, forKey: Keys.selectedRouteID)
+    }
+
+    private func isLegacyDefaultOnly(_ routes: [TrafficRoute]) -> Bool {
+        guard routes.count == 1, let route = routes.first else { return false }
+        return route.name == "Cloudflare" && route.url.contains("speed.cloudflare.com")
     }
 
     private enum Keys {

@@ -3,6 +3,7 @@ import SwiftUI
 struct ContentView: View {
     @EnvironmentObject private var store: AppStore
     @EnvironmentObject private var runner: TrafficRunner
+    @EnvironmentObject private var latencyMonitor: RegionLatencyMonitor
     @State private var showingSettings = false
     @State private var showingThemes = false
     @State private var showingRoutes = false
@@ -30,6 +31,7 @@ struct ContentView: View {
                 SettingsView()
                     .environmentObject(store)
                     .environmentObject(runner)
+                    .environmentObject(latencyMonitor)
             }
             .sheet(isPresented: $showingThemes) {
                 ThemePickerView()
@@ -38,6 +40,11 @@ struct ContentView: View {
             .sheet(isPresented: $showingRoutes) {
                 RoutePickerView()
                     .environmentObject(store)
+            }
+            .task {
+                latencyMonitor.start()
+            }.onDisappear {
+                latencyMonitor.stop()
             }
         }
     }
@@ -189,23 +196,60 @@ struct ControlDeck: View {
 }
 
 struct RegionLatencyCard: View {
+    @EnvironmentObject private var latencyMonitor: RegionLatencyMonitor
     let theme: AppTheme
 
     var body: some View {
-        HStack(spacing: 14) {
-            Text("地区延迟")
-                .font(.system(size: 18, weight: .heavy))
-                .foregroundStyle(theme.text.color)
-            Text("待检测")
-                .font(.system(size: 15, weight: .bold))
-                .foregroundStyle(theme.success.color)
-                .padding(.horizontal, 16)
-                .padding(.vertical, 7)
-                .background(Capsule().fill(theme.success.color.opacity(0.14)).overlay(Capsule().stroke(theme.success.color.opacity(0.35))))
-            Spacer()
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Text("地区延迟")
+                    .font(.system(size: 18, weight: .heavy))
+                    .foregroundStyle(theme.text.color)
+                Spacer()
+                if latencyMonitor.isChecking {
+                    ProgressView()
+                        .tint(theme.primary.color)
+                        .scaleEffect(0.85)
+                }
+            }
+
+            if latencyMonitor.results.isEmpty {
+                Text(latencyMonitor.isChecking ? "正在检测" : "暂未检测到可用地区")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(theme.muted.color)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            } else {
+                VStack(spacing: 10) {
+                    ForEach(latencyMonitor.results) { result in
+                        LatencyResultRow(result: result, theme: theme)
+                    }
+                }
+            }
         }
         .padding(18)
         .background(RoundedRectangle(cornerRadius: 22, style: .continuous).fill(theme.surface.color).overlay(RoundedRectangle(cornerRadius: 22, style: .continuous).stroke(theme.line.color)))
+    }
+}
+
+struct LatencyResultRow: View {
+    let result: RegionLatencyResult
+    let theme: AppTheme
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 12) {
+            Text(result.label)
+                .font(.system(size: 15, weight: .bold))
+                .foregroundStyle(theme.text.color)
+                .lineLimit(2)
+                .fixedSize(horizontal: false, vertical: true)
+            Spacer(minLength: 12)
+            Text("\(result.latencyMillis)ms")
+                .font(.system(size: 14, weight: .heavy, design: .rounded))
+                .foregroundStyle(theme.success.color)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 6)
+                .background(Capsule().fill(theme.success.color.opacity(0.14)).overlay(Capsule().stroke(theme.success.color.opacity(0.35))))
+        }
     }
 }
 
