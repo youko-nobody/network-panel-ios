@@ -6,16 +6,19 @@ settings:
     SWIFT_VERSION: 5.0
     IPHONEOS_DEPLOYMENT_TARGET: 17.0
     PRODUCT_BUNDLE_IDENTIFIER: cn.netart.networkpanel.ios
-    MARKETING_VERSION: 0.1.0
-    CURRENT_PROJECT_VERSION: 1
+    MARKETING_VERSION: 0.1.1
+    CURRENT_PROJECT_VERSION: 2
 targets:
   NetworkPanel:
     type: application
     platform: iOS
     sources:
-      - path: NetworkPanel
+      - path: NetworkPanel/App
+      - path: NetworkPanel/Models
+      - path: NetworkPanel/Services
+      - path: NetworkPanel/Views
     resources:
-      - path: NetworkPanel/Resources
+      - path: NetworkPanel/Resources/Assets.xcassets
     info:
       path: NetworkPanel/Resources/Info.plist
       properties:
@@ -24,13 +27,10 @@ targets:
         UILaunchScreen: {}
         UIApplicationSceneManifest:
           UIApplicationSupportsMultipleScenes: false
-          UISceneConfigurations:
-            UIWindowSceneSessionRoleApplication:
-              - UISceneConfigurationName: Default Configuration
-                UISceneDelegateClassName: ""
     settings:
       base:
         INFOPLIST_FILE: NetworkPanel/Resources/Info.plist
-        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         CODE_SIGN_STYLE: Manual
         CODE_SIGNING_ALLOWED: NO
+        CODE_SIGNING_REQUIRED: NO
+        CODE_SIGN_IDENTITY: ""

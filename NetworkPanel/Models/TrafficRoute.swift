@@ -1,6 +1,6 @@
 import Foundation
 
-struct TrafficRoute: Identifiable, Codable, Equatable {
+struct TrafficRoute: Identifiable, Codable, Equatable, Sendable {
     var id: UUID
     var name: String
     var url: String

@@ -29,8 +29,11 @@ jobs:
             -scheme NetworkPanel \
             -configuration Release \
             -sdk iphoneos \
+            -destination 'generic/platform=iOS' \
             -derivedDataPath DerivedData \
             CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
             build
 
       - name: Create unsigned IPA
@@ -48,4 +51,8 @@ jobs:
           name: network-panel-ios ${{ github.ref_name }}
           body: |
             Native SwiftUI build for iPhone and iPad.
-            This release contains an unsigned IPA for self-signing or sideloading.
+
+            Asset:
+            - network-panel-ios-${{ github.ref_name }}-unsigned.ipa
+
+            This IPA is unsigned. Use your own self-signing or sideloading tool before installing it on iPhone or iPad.
