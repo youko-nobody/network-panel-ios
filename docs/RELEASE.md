@@ -8,15 +8,15 @@ That IPA is intended for self-signing or sideloading workflows.
 Push a tag:
 
 ```powershell
-git tag v0.1.4
+git tag v0.1.5
 git push origin main
-git push origin v0.1.4
+git push origin v0.1.5
 ```
 
 Actions will upload:
 
 ```text
-network-panel-ios-v0.1.4-unsigned.ipa
+network-panel-ios-v0.1.5-unsigned.ipa
 ```
 
 ## Signed IPA later

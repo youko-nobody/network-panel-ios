@@ -23,8 +23,6 @@ jobs:
         run: xcodegen generate
 
       - name: Build iOS app
-        id: build
-        continue-on-error: true
         shell: bash
         run: |
           set -o pipefail
@@ -49,7 +47,6 @@ jobs:
           fi
 
       - name: Create unsigned IPA
-        if: steps.build.outcome == 'success'
         run: |
           APP_PATH="$(find DerivedData/Build/Products/Release-iphoneos -name 'NetworkPanel.app' -type d | head -n 1)"
           test -n "$APP_PATH"
@@ -58,13 +55,9 @@ jobs:
           zip -r network-panel-ios-${{ github.ref_name }}-unsigned.ipa Payload
 
       - name: Create GitHub Release
-        if: always()
         uses: softprops/action-gh-release@v2
         with:
-          fail_on_unmatched_files: false
-          files: |
-            network-panel-ios-${{ github.ref_name }}-unsigned.ipa
-            xcodebuild.log
+          files: network-panel-ios-${{ github.ref_name }}-unsigned.ipa
           name: network-panel-ios ${{ github.ref_name }}
           body: |
             Native SwiftUI build for iPhone and iPad.
@@ -73,8 +66,6 @@ jobs:
             - network-panel-ios-${{ github.ref_name }}-unsigned.ipa
 
             This IPA is unsigned. Use your own self-signing or sideloading tool before installing it on iPhone or iPad.
-
-            If the IPA is missing, download xcodebuild.log from this release. The iOS build failed before packaging.
 
       - name: Upload xcodebuild log
         if: always()
