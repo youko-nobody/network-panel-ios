@@ -46,6 +46,7 @@ struct ContentView: View {
                                 }
                             }
                         }
+                        .padding(.top, wideLayout ? max(28, proxy.size.height * 0.055) : 0)
                         .frame(maxWidth: wideLayout ? 1120 : 560)
                         .padding(.horizontal, wideLayout ? 24 : 16)
                         .padding(.bottom, 24)

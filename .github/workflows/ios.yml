@@ -48,10 +48,15 @@ jobs:
         run: |
           APP_PATH="$(find DerivedData/Build/Products/Release-iphoneos -name 'NetworkPanel.app' -type d | head -n 1)"
           test -n "$APP_PATH"
+          bash scripts/prepare_ipa_assets.sh "$APP_PATH"
           /usr/libexec/PlistBuddy -c "Print CFBundleDisplayName" "$APP_PATH/Info.plist"
           /usr/libexec/PlistBuddy -c "Print CFBundleName" "$APP_PATH/Info.plist"
           /usr/libexec/PlistBuddy -c "Print UIDeviceFamily" "$APP_PATH/Info.plist"
           /usr/libexec/PlistBuddy -c "Print UIRequiresFullScreen" "$APP_PATH/Info.plist"
+          /usr/libexec/PlistBuddy -c "Print UIBackgroundModes" "$APP_PATH/Info.plist"
+          /usr/libexec/PlistBuddy -c "Print CFBundleIcons" "$APP_PATH/Info.plist"
+          test -f "$APP_PATH/AppIcon60x60@3x.png"
+          test -f "$APP_PATH/AppIcon76x76@2x~ipad.png"
           mkdir -p Payload
           cp -R "$APP_PATH" Payload/
           zip -r NetworkPanel-unsigned.ipa Payload

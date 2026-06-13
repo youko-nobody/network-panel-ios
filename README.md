@@ -5,16 +5,10 @@
 ## 特点
 
 - 中文界面
-- 默认线路：移动云盘
 - 支持多主题切换
 - 支持 iPad 横屏与分屏
 - 支持地区延迟检测
 - 支持 GitHub Actions 生成 unsigned IPA
-
-## 默认线路
-
-- 名称：移动云盘
-- 地址：https://yun.mcloud.139.com/hongseyunpan/2.43G.zip
 
 ## 发布
 

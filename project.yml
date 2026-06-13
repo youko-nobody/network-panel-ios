@@ -6,8 +6,8 @@ settings:
     SWIFT_VERSION: 5.0
     IPHONEOS_DEPLOYMENT_TARGET: 17.0
     PRODUCT_BUNDLE_IDENTIFIER: cn.netart.networkpanel.ios
-    MARKETING_VERSION: 0.1.8
-    CURRENT_PROJECT_VERSION: 9
+    MARKETING_VERSION: 0.1.9
+    CURRENT_PROJECT_VERSION: 10
 targets:
   NetworkPanel:
     type: application
@@ -17,7 +17,6 @@ targets:
       - path: NetworkPanel/Models
       - path: NetworkPanel/Services
       - path: NetworkPanel/Views
-    resources:
       - path: NetworkPanel/Resources/Assets.xcassets
     info:
       path: NetworkPanel/Resources/Info.plist
@@ -25,9 +24,12 @@ targets:
         CFBundleDisplayName: 网络面板
         CFBundleName: 网络面板
         CFBundleDevelopmentRegion: zh_CN
+        CFBundleIconName: AppIcon
         UIDeviceFamily:
           - 1
           - 2
+        UIBackgroundModes:
+          - audio
         UIRequiresFullScreen: false
         UISupportedInterfaceOrientations:
           - UIInterfaceOrientationPortrait

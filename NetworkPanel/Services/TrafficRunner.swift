@@ -20,6 +20,7 @@ final class TrafficRunner: ObservableObject {
         self.store = store
         isRunning = true
         statusText = "运行中"
+        BackgroundAudioKeeper.shared.start()
         bytesPerSecond = 0
         activeWorkers = 0
         lastRateBytes = sessionBytes
@@ -50,6 +51,7 @@ final class TrafficRunner: ObservableObject {
         tasks.removeAll()
         rateTask?.cancel()
         rateTask = nil
+        BackgroundAudioKeeper.shared.stop()
         bytesPerSecond = 0
         activeWorkers = 0
     }
