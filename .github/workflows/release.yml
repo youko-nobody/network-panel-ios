@@ -23,7 +23,9 @@ jobs:
         run: xcodegen generate
 
       - name: Build iOS app
+        shell: bash
         run: |
+          set -o pipefail
           xcodebuild \
             -project NetworkPanel.xcodeproj \
             -scheme NetworkPanel \
@@ -34,7 +36,7 @@ jobs:
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGN_IDENTITY="" \
-            build
+            build 2>&1 | tee xcodebuild.log
 
       - name: Create unsigned IPA
         run: |
@@ -56,3 +58,10 @@ jobs:
             - network-panel-ios-${{ github.ref_name }}-unsigned.ipa
 
             This IPA is unsigned. Use your own self-signing or sideloading tool before installing it on iPhone or iPad.
+
+      - name: Upload xcodebuild log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: xcodebuild-log
+          path: xcodebuild.log

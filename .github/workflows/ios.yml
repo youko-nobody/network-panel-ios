@@ -21,7 +21,9 @@ jobs:
         run: xcodegen generate
 
       - name: Build iOS app
+        shell: bash
         run: |
+          set -o pipefail
           xcodebuild \
             -project NetworkPanel.xcodeproj \
             -scheme NetworkPanel \
@@ -32,7 +34,7 @@ jobs:
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGN_IDENTITY="" \
-            build
+            build 2>&1 | tee xcodebuild.log
 
       - name: Create unsigned IPA
         run: |
@@ -47,3 +49,10 @@ jobs:
         with:
           name: NetworkPanel-unsigned
           path: NetworkPanel-unsigned.ipa
+
+      - name: Upload xcodebuild log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: xcodebuild-log
+          path: xcodebuild.log
