@@ -105,10 +105,11 @@ struct RouteEditorView: View {
                 }
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("保存") {
-                        if var route {
-                            route.name = name
-                            route.url = url
-                            store.updateRoute(route)
+                        if let existingRoute = route {
+                            var updatedRoute = existingRoute
+                            updatedRoute.name = name
+                            updatedRoute.url = url
+                            store.updateRoute(updatedRoute)
                         } else {
                             store.addRoute(name: name, url: url)
                         }
