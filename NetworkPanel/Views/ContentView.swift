@@ -18,25 +18,22 @@ struct ContentView: View {
                     LinearGradient(colors: [theme.backgroundTop.color, theme.backgroundBottom.color], startPoint: .top, endPoint: .bottom)
                         .ignoresSafeArea()
 
-                    ScrollView {
-                        VStack(spacing: 16) {
-                            header(theme)
-                            if wideLayout {
-                                HStack(alignment: .top, spacing: 16) {
-                                    VStack(spacing: 16) {
-                                        SpeedHero(theme: theme)
-                                    }
-                                    .frame(maxWidth: .infinity)
-
-                                    VStack(spacing: 16) {
-                                        ControlDeck(theme: theme, showingRoutes: $showingRoutes, showingThreads: $showingThreads)
-                                        if latencyMonitor.isChecking || !latencyMonitor.results.isEmpty {
-                                            RegionLatencyCard(theme: theme)
-                                        }
-                                    }
-                                    .frame(maxWidth: .infinity)
-                                }
-                            } else {
+                    if wideLayout {
+                        VStack(spacing: 0) {
+                            Spacer(minLength: 0)
+                            VStack(spacing: 16) {
+                                header(theme)
+                                wideContent(theme)
+                            }
+                            .frame(maxWidth: 1120)
+                            .padding(.horizontal, 24)
+                            Spacer(minLength: 0)
+                        }
+                        .frame(maxWidth: .infinity, minHeight: proxy.size.height)
+                    } else {
+                        ScrollView {
+                            VStack(spacing: 16) {
+                                header(theme)
                                 VStack(spacing: 14) {
                                     SpeedHero(theme: theme)
                                     ControlDeck(theme: theme, showingRoutes: $showingRoutes, showingThreads: $showingThreads)
@@ -45,12 +42,11 @@ struct ContentView: View {
                                     }
                                 }
                             }
+                            .frame(maxWidth: 560)
+                            .padding(.horizontal, 16)
+                            .padding(.bottom, 24)
+                            .frame(maxWidth: .infinity)
                         }
-                        .padding(.top, wideLayout ? max(28, proxy.size.height * 0.055) : 0)
-                        .frame(maxWidth: wideLayout ? 1120 : 560)
-                        .padding(.horizontal, wideLayout ? 24 : 16)
-                        .padding(.bottom, 24)
-                        .frame(maxWidth: .infinity)
                     }
                 }
                 .toolbar(.hidden, for: .navigationBar)
@@ -133,6 +129,21 @@ struct ContentView: View {
             showingSettings = true
         }
         .buttonStyle(ChipButtonStyle(theme: theme, minWidth: 58))
+    }
+
+    private func wideContent(_ theme: AppTheme) -> some View {
+        HStack(alignment: .top, spacing: 16) {
+            SpeedHero(theme: theme)
+                .frame(maxWidth: .infinity)
+
+            VStack(spacing: 16) {
+                ControlDeck(theme: theme, showingRoutes: $showingRoutes, showingThreads: $showingThreads)
+                if latencyMonitor.isChecking || !latencyMonitor.results.isEmpty {
+                    RegionLatencyCard(theme: theme)
+                }
+            }
+            .frame(maxWidth: .infinity)
+        }
     }
 }
 
