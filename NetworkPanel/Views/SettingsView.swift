@@ -4,6 +4,8 @@ struct SettingsView: View {
     @EnvironmentObject private var store: AppStore
     @EnvironmentObject private var runner: TrafficRunner
     @Environment(\.dismiss) private var dismiss
+    @State private var showingRateLimit = false
+    @State private var showingTrafficLimit = false
 
     var body: some View {
         let theme = store.currentTheme
@@ -20,11 +22,16 @@ struct SettingsView: View {
                         ), in: 1...64, step: 1) {
                             Text("线程数 \(store.threadCount)")
                         }
-                        Stepper("速率上限 \(store.rateLimitMbps == 0 ? "不限" : "\(store.rateLimitMbps) Mbps")", value: $store.rateLimitMbps, in: 0...10000, step: 10)
+                        Button("速率上限 \(store.rateLimitMbps == 0 ? "不限" : "\(store.rateLimitMbps) Mbps")") {
+                            showingRateLimit = true
+                        }
                     }
 
                     Section("流量") {
                         Text("累计流量 \(Formatters.bytes(store.totalBytes))")
+                        Button("本次流量上限 \(store.trafficLimitBytes == 0 ? "不限" : Formatters.bytes(store.trafficLimitBytes))") {
+                            showingTrafficLimit = true
+                        }
                         Button("清零累计流量") {
                             store.resetTotalBytes()
                         }
@@ -45,6 +52,14 @@ struct SettingsView: View {
                 ToolbarItem(placement: .topBarLeading) {
                     Button("关闭") { dismiss() }
                 }
+            }
+            .sheet(isPresented: $showingRateLimit) {
+                RateLimitView()
+                    .environmentObject(store)
+            }
+            .sheet(isPresented: $showingTrafficLimit) {
+                TrafficLimitView()
+                    .environmentObject(store)
             }
             .tint(theme.primary.color)
         }

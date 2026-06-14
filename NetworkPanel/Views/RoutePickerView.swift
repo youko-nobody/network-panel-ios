@@ -4,6 +4,7 @@ struct RoutePickerView: View {
     @EnvironmentObject private var store: AppStore
     @Environment(\.dismiss) private var dismiss
     @State private var showingAdd = false
+    @State private var editingRoute: TrafficRoute?
 
     var body: some View {
         let theme = store.currentTheme
@@ -36,6 +37,12 @@ struct RoutePickerView: View {
                         }
                         .listRowBackground(theme.surface.color)
                         .swipeActions {
+                            Button {
+                                editingRoute = route
+                            } label: {
+                                Text("编辑")
+                            }
+                            .tint(theme.primary.color)
                             Button(role: .destructive) {
                                 store.deleteRoute(route)
                             } label: {
@@ -59,6 +66,10 @@ struct RoutePickerView: View {
                 RouteEditorView()
                     .environmentObject(store)
             }
+            .sheet(item: $editingRoute) { route in
+                RouteEditorView(route: route)
+                    .environmentObject(store)
+            }
         }
     }
 }
@@ -66,8 +77,15 @@ struct RoutePickerView: View {
 struct RouteEditorView: View {
     @EnvironmentObject private var store: AppStore
     @Environment(\.dismiss) private var dismiss
+    let route: TrafficRoute?
     @State private var name = ""
     @State private var url = ""
+
+    init(route: TrafficRoute? = nil) {
+        self.route = route
+        _name = State(initialValue: route?.name ?? "")
+        _url = State(initialValue: route?.url ?? "")
+    }
 
     var body: some View {
         let theme = store.currentTheme
@@ -80,14 +98,20 @@ struct RouteEditorView: View {
                         .textInputAutocapitalization(.never)
                 }
             }
-            .navigationTitle("添加线路")
+            .navigationTitle(route == nil ? "添加线路" : "编辑线路")
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     Button("取消") { dismiss() }
                 }
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("保存") {
-                        store.addRoute(name: name, url: url)
+                        if var route {
+                            route.name = name
+                            route.url = url
+                            store.updateRoute(route)
+                        } else {
+                            store.addRoute(name: name, url: url)
+                        }
                         dismiss()
                     }
                     .disabled(url.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)

@@ -110,9 +110,9 @@ final class AppStore: ObservableObject {
     private func load() {
         selectedThemeID = UserDefaults.standard.string(forKey: Keys.themeID) ?? AppTheme.all[0].id
         enhancedConcurrency = UserDefaults.standard.object(forKey: Keys.enhancedConcurrency) as? Bool ?? true
-        trafficLimitBytes = Int64(UserDefaults.standard.object(forKey: Keys.trafficLimitBytes) as? Int ?? 0)
+        trafficLimitBytes = UserDefaults.standard.number(forKey: Keys.trafficLimitBytes)?.int64Value ?? 0
         rateLimitMbps = UserDefaults.standard.integer(forKey: Keys.rateLimitMbps)
-        totalBytes = Int64(UserDefaults.standard.object(forKey: Keys.totalBytes) as? Int ?? 0)
+        totalBytes = UserDefaults.standard.number(forKey: Keys.totalBytes)?.int64Value ?? 0
 
         if let data = UserDefaults.standard.data(forKey: Keys.routes),
            let decoded = try? JSONDecoder().decode([TrafficRoute].self, from: data) {

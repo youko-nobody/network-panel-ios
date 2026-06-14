@@ -8,11 +8,13 @@ struct ContentView: View {
     @State private var showingThemes = false
     @State private var showingRoutes = false
     @State private var showingThreads = false
+    @State private var showingRateLimit = false
+    @State private var showingTrafficLimit = false
 
     var body: some View {
         let theme = store.currentTheme
         GeometryReader { proxy in
-            let wideLayout = proxy.size.width >= 760
+            let wideLayout = proxy.size.width >= 900 && proxy.size.width > proxy.size.height
             let phoneTopPadding = max(14, min(proxy.safeAreaInsets.top * 0.35, 24))
             NavigationStack {
                 ZStack {
@@ -36,7 +38,7 @@ struct ContentView: View {
                             VStack(spacing: 14) {
                                 header(theme, compact: true)
                                 VStack(spacing: 12) {
-                                    SpeedHero(theme: theme, compact: true)
+                                    SpeedHero(theme: theme, compact: true, onRateLimitTap: { showingRateLimit = true }, onTrafficLimitTap: { showingTrafficLimit = true })
                                     ControlDeck(theme: theme, compact: true, showingRoutes: $showingRoutes, showingThreads: $showingThreads)
                                     if latencyMonitor.isChecking || !latencyMonitor.results.isEmpty {
                                         RegionLatencyCard(theme: theme)
@@ -68,6 +70,14 @@ struct ContentView: View {
                 }
                 .sheet(isPresented: $showingThreads) {
                     ThreadSettingsView()
+                        .environmentObject(store)
+                }
+                .sheet(isPresented: $showingRateLimit) {
+                    RateLimitView()
+                        .environmentObject(store)
+                }
+                .sheet(isPresented: $showingTrafficLimit) {
+                    TrafficLimitView()
                         .environmentObject(store)
                 }
                 .task {
@@ -135,7 +145,7 @@ struct ContentView: View {
 
     private func wideContent(_ theme: AppTheme) -> some View {
         HStack(alignment: .top, spacing: 16) {
-            SpeedHero(theme: theme, compact: false)
+            SpeedHero(theme: theme, compact: false, onRateLimitTap: { showingRateLimit = true }, onTrafficLimitTap: { showingTrafficLimit = true })
                 .frame(maxWidth: .infinity)
                 .frame(height: 420)
 
@@ -155,6 +165,8 @@ struct SpeedHero: View {
     @EnvironmentObject private var runner: TrafficRunner
     let theme: AppTheme
     let compact: Bool
+    let onRateLimitTap: () -> Void
+    let onTrafficLimitTap: () -> Void
 
     var body: some View {
         ZStack {
@@ -177,12 +189,15 @@ struct SpeedHero: View {
                             .foregroundStyle(theme.muted.color)
                     }
                     Spacer()
-                    Text(rateLimitText)
-                        .font(.system(size: compact ? 12 : 13, weight: .bold))
-                        .foregroundStyle(theme.onPrimary.color)
-                        .padding(.horizontal, compact ? 12 : 16)
-                        .padding(.vertical, compact ? 7 : 9)
-                        .background(Capsule().fill(theme.primary.color))
+                    Button(action: onRateLimitTap) {
+                        Text(rateLimitText)
+                            .font(.system(size: compact ? 12 : 13, weight: .bold))
+                            .foregroundStyle(theme.onPrimary.color)
+                            .padding(.horizontal, compact ? 12 : 16)
+                            .padding(.vertical, compact ? 7 : 9)
+                            .background(Capsule().fill(theme.primary.color))
+                    }
+                    .buttonStyle(.plain)
                 }
 
                 HStack(alignment: .firstTextBaseline, spacing: 20) {
@@ -205,7 +220,7 @@ struct SpeedHero: View {
                 HStack(spacing: 0) {
                     MetricValue(title: "总消耗", value: Formatters.bytes(store.totalBytes), theme: theme)
                     Rectangle().fill(theme.line.color).frame(width: 1, height: 56)
-                    MetricValue(title: "本次", value: Formatters.bytes(runner.sessionBytes), theme: theme)
+                    MetricValue(title: "本次", value: Formatters.bytes(runner.sessionBytes), actionText: trafficLimitActionText, theme: theme, onTap: onTrafficLimitTap)
                 }
                 .padding(.vertical, compact ? 10 : 14)
                 .background(RoundedRectangle(cornerRadius: 22, style: .continuous).fill(theme.surface.color).overlay(RoundedRectangle(cornerRadius: 22, style: .continuous).stroke(theme.line.color)))
@@ -217,6 +232,10 @@ struct SpeedHero: View {
 
     private var rateLimitText: String {
         store.rateLimitMbps > 0 ? "速率上限 \(store.rateLimitMbps) Mbps" : "速率上限 不限"
+    }
+
+    private var trafficLimitActionText: String {
+        store.trafficLimitBytes > 0 ? "上限" : "设置"
     }
 }
 
@@ -331,13 +350,40 @@ struct LatencyResultRow: View {
 struct MetricValue: View {
     let title: String
     let value: String
+    var actionText: String? = nil
     let theme: AppTheme
+    var onTap: (() -> Void)? = nil
 
     var body: some View {
+        Group {
+            if let onTap {
+                Button(action: onTap) {
+                    content
+                }
+                .buttonStyle(.plain)
+            } else {
+                content
+            }
+        }
+    }
+
+    private var content: some View {
         VStack(spacing: 5) {
-            Text(title)
-                .font(.system(size: 13, weight: .bold))
-                .foregroundStyle(theme.muted.color)
+            HStack(spacing: 6) {
+                Text(title)
+                    .font(.system(size: 13, weight: .bold))
+                    .foregroundStyle(theme.muted.color)
+                if let actionText {
+                    Text(actionText)
+                        .font(.system(size: 10, weight: .heavy))
+                        .foregroundStyle(theme.onPrimary.color)
+                        .padding(.horizontal, 7)
+                        .padding(.vertical, 3)
+                        .background(Capsule().fill(theme.primary.color))
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .center)
+
             Text(value)
                 .font(.system(size: 20, weight: .heavy, design: .rounded))
                 .foregroundStyle(theme.text.color)

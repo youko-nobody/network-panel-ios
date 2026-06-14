@@ -13,6 +13,8 @@ final class TrafficRunner: ObservableObject {
     private var rateTask: Task<Void, Never>?
     private var lastRateBytes: Int64 = 0
     private var lastRateTime = Date()
+    private var rateWindowBytes: Int64 = 0
+    private var rateWindowStart = Date()
     private weak var store: AppStore?
 
     func start(route: TrafficRoute, store: AppStore) {
@@ -25,6 +27,8 @@ final class TrafficRunner: ObservableObject {
         activeWorkers = 0
         lastRateBytes = sessionBytes
         lastRateTime = Date()
+        rateWindowBytes = 0
+        rateWindowStart = Date()
 
         let workerCount = store.enhancedConcurrency ? store.threadCount : 1
         for _ in 0..<max(1, workerCount) {
@@ -92,11 +96,17 @@ final class TrafficRunner: ObservableObject {
                     localCount += 1
                     if localCount >= 32_768 {
                         await addBytes(localCount)
+                        if let delay = await rateLimitDelay(bytes: localCount), delay > 0 {
+                            try? await Task.sleep(nanoseconds: UInt64(delay * 1_000_000_000))
+                        }
                         localCount = 0
                     }
                 }
                 if localCount > 0 {
                     await addBytes(localCount)
+                    if let delay = await rateLimitDelay(bytes: localCount), delay > 0 {
+                        try? await Task.sleep(nanoseconds: UInt64(delay * 1_000_000_000))
+                    }
                 }
             } catch {
                 try? await Task.sleep(nanoseconds: 700_000_000)
@@ -107,13 +117,49 @@ final class TrafficRunner: ObservableObject {
     @MainActor
     private func addBytes(_ bytes: Int64) {
         guard isRunning, bytes > 0 else { return }
-        if let limit = store?.trafficLimitBytes, limit > 0, sessionBytes >= limit {
-            pause()
-            statusText = "已达到流量上限"
+        if let limit = store?.trafficLimitBytes, limit > 0 {
+            let remaining = limit - sessionBytes
+            guard remaining > 0 else {
+                pause()
+                statusText = "已达到流量上限"
+                return
+            }
+            let acceptedBytes = min(bytes, remaining)
+            sessionBytes += acceptedBytes
+            store?.addTotalBytes(acceptedBytes)
+            if acceptedBytes < bytes {
+                pause()
+                statusText = "已达到流量上限"
+            }
             return
         }
         sessionBytes += bytes
         store?.addTotalBytes(bytes)
+    }
+
+    @MainActor
+    private func rateLimitDelay(bytes: Int64) -> TimeInterval? {
+        guard isRunning,
+              bytes > 0,
+              let rateLimitMbps = store?.rateLimitMbps,
+              rateLimitMbps > 0 else {
+            return nil
+        }
+        let limitBytesPerSecond = Int64(rateLimitMbps) * 1_000_000 / 8
+        guard limitBytesPerSecond > 0 else { return nil }
+
+        let now = Date()
+        let elapsed = now.timeIntervalSince(rateWindowStart)
+        if elapsed >= 1.0 {
+            rateWindowStart = now
+            rateWindowBytes = 0
+        }
+
+        rateWindowBytes += bytes
+        let expectedElapsed = Double(rateWindowBytes) / Double(limitBytesPerSecond)
+        let actualElapsed = max(0, Date().timeIntervalSince(rateWindowStart))
+        let delay = expectedElapsed - actualElapsed
+        return max(0, delay)
     }
 
     @MainActor
