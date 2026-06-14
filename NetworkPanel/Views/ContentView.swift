@@ -135,6 +135,7 @@ struct ContentView: View {
         HStack(alignment: .top, spacing: 16) {
             SpeedHero(theme: theme)
                 .frame(maxWidth: .infinity)
+                .frame(height: 420)
 
             VStack(spacing: 16) {
                 ControlDeck(theme: theme, showingRoutes: $showingRoutes, showingThreads: $showingThreads)
