@@ -41,7 +41,6 @@ struct ContentView: View {
                                     if latencyMonitor.isChecking || !latencyMonitor.results.isEmpty {
                                         RegionLatencyCard(theme: theme)
                                     }
-                                    ProjectLinksCard(theme: theme)
                                 }
                             }
                             .frame(maxWidth: 520)
@@ -145,7 +144,6 @@ struct ContentView: View {
                 if latencyMonitor.isChecking || !latencyMonitor.results.isEmpty {
                     RegionLatencyCard(theme: theme)
                 }
-                ProjectLinksCard(theme: theme)
             }
             .frame(maxWidth: .infinity)
         }
@@ -305,50 +303,6 @@ struct RegionLatencyCard: View {
         }
         .padding(18)
         .background(RoundedRectangle(cornerRadius: 22, style: .continuous).fill(theme.surface.color).overlay(RoundedRectangle(cornerRadius: 22, style: .continuous).stroke(theme.line.color)))
-    }
-}
-
-struct ProjectLinksCard: View {
-    let theme: AppTheme
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("项目地址")
-                .font(.system(size: 18, weight: .heavy))
-                .foregroundStyle(theme.text.color)
-
-            VStack(spacing: 10) {
-                ProjectLinkRow(title: "Android 项目", url: "https://github.com/youko-nobody/network-panel", theme: theme)
-                ProjectLinkRow(title: "iOS 项目", url: "https://github.com/youko-nobody/network-panel-ios", theme: theme)
-            }
-        }
-        .padding(18)
-        .background(RoundedRectangle(cornerRadius: 22, style: .continuous).fill(theme.surface.color).overlay(RoundedRectangle(cornerRadius: 22, style: .continuous).stroke(theme.line.color)))
-    }
-}
-
-struct ProjectLinkRow: View {
-    let title: String
-    let url: String
-    let theme: AppTheme
-
-    var body: some View {
-        Link(destination: URL(string: url)!) {
-            VStack(alignment: .leading, spacing: 4) {
-                Text(title)
-                    .font(.system(size: 15, weight: .bold))
-                    .foregroundStyle(theme.text.color)
-                Text(url)
-                    .font(.system(size: 12, weight: .semibold))
-                    .foregroundStyle(theme.muted.color)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.7)
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.horizontal, 14)
-            .padding(.vertical, 12)
-            .background(RoundedRectangle(cornerRadius: 16, style: .continuous).fill(theme.chip.color).overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(theme.line.color)))
-        }
     }
 }
 
