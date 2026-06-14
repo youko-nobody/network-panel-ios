@@ -252,6 +252,11 @@ struct ControlDeck: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: compact ? 12 : 14) {
+            if !compact {
+                Color.clear
+                    .frame(height: 36)
+            }
+
             HStack {
                 Text("控制台")
                     .font(.system(size: compact ? 20 : 22, weight: .heavy))
@@ -303,6 +308,18 @@ struct RegionLatencyCard: View {
     var wide: Bool = false
 
     var body: some View {
+        Group {
+            if wide {
+                wideBody
+            } else {
+                compactBody
+            }
+        }
+        .padding(wide ? 20 : 18)
+        .background(RoundedRectangle(cornerRadius: 22, style: .continuous).fill(theme.surface.color).overlay(RoundedRectangle(cornerRadius: 22, style: .continuous).stroke(theme.line.color)))
+    }
+
+    private var compactBody: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
                 Text("地区延迟")
@@ -322,19 +339,38 @@ struct RegionLatencyCard: View {
                     .foregroundStyle(theme.muted.color)
                     .frame(maxWidth: .infinity, alignment: .leading)
             } else if !latencyMonitor.results.isEmpty {
-                if wide {
-                    WideLatencyStrip(results: latencyMonitor.results, theme: theme)
-                } else {
-                    VStack(spacing: 10) {
-                        ForEach(latencyMonitor.results) { result in
-                            LatencyResultRow(result: result, theme: theme)
-                        }
+                VStack(spacing: 10) {
+                    ForEach(latencyMonitor.results) { result in
+                        LatencyResultRow(result: result, theme: theme)
                     }
                 }
             }
         }
-        .padding(wide ? 20 : 18)
-        .background(RoundedRectangle(cornerRadius: 22, style: .continuous).fill(theme.surface.color).overlay(RoundedRectangle(cornerRadius: 22, style: .continuous).stroke(theme.line.color)))
+    }
+
+    private var wideBody: some View {
+        HStack(alignment: .center, spacing: 16) {
+            Text("地区延迟")
+                .font(.system(size: 18, weight: .heavy))
+                .foregroundStyle(theme.text.color)
+                .frame(width: 92, alignment: .leading)
+
+            if latencyMonitor.results.isEmpty && latencyMonitor.isChecking {
+                Text("正在检测")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(theme.muted.color)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            } else {
+                WideLatencyStrip(results: latencyMonitor.results, theme: theme)
+            }
+
+            if latencyMonitor.isChecking {
+                ProgressView()
+                    .tint(theme.primary.color)
+                    .scaleEffect(0.85)
+            }
+        }
+        .frame(minHeight: 56)
     }
 }
 
