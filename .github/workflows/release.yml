@@ -69,7 +69,15 @@ jobs:
           files: network-panel-ios-${{ github.ref_name }}-unsigned.ipa
           name: 网络面板 iOS ${{ github.ref_name }}
           body: |
-            网络面板 iPhone / iPad 原生 SwiftUI 版本。
+            网络面板 iPhone / iPad 原生 SwiftUI 网络工具。
+
+            主要功能：
+            - 实时显示 MB/s 与 Mbps
+            - 统计累计用量和本次会话用量
+            - 管理测试线路与并发线程
+            - 支持速率上限设置
+            - 检测地区延迟与连接质量
+            - 支持多主题、iPad 横屏、分屏和多窗口
 
             下载文件：
             - network-panel-ios-${{ github.ref_name }}-unsigned.ipa
