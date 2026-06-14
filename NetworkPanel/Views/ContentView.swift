@@ -145,18 +145,16 @@ struct ContentView: View {
 
     private func wideContent(_ theme: AppTheme) -> some View {
         VStack(spacing: 18) {
-            GeometryReader { proxy in
-                let spacing: CGFloat = 18
-                let availableWidth = proxy.size.width - spacing
-                HStack(alignment: .top, spacing: spacing) {
-                    SpeedHero(theme: theme, compact: false, onRateLimitTap: { showingRateLimit = true }, onTrafficLimitTap: { showingTrafficLimit = true })
-                        .frame(width: availableWidth * 0.55, height: 388)
+            HStack(alignment: .top, spacing: 18) {
+                SpeedHero(theme: theme, compact: false, onRateLimitTap: { showingRateLimit = true }, onTrafficLimitTap: { showingTrafficLimit = true })
+                    .frame(maxWidth: 562)
+                    .frame(height: 388)
 
-                    ControlDeck(theme: theme, compact: false, showingRoutes: $showingRoutes, showingThreads: $showingThreads)
-                        .frame(width: availableWidth * 0.45, minHeight: 388, alignment: .top)
-                }
+                ControlDeck(theme: theme, compact: false, showingRoutes: $showingRoutes, showingThreads: $showingThreads)
+                    .frame(maxWidth: 460)
+                    .frame(minHeight: 388, alignment: .top)
             }
-            .frame(height: 388)
+            .frame(maxWidth: .infinity)
 
             if latencyMonitor.isChecking || !latencyMonitor.results.isEmpty {
                 RegionLatencyCard(theme: theme, wide: true)
