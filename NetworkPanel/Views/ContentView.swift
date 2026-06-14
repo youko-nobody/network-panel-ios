@@ -24,12 +24,12 @@ struct ContentView: View {
                     if wideLayout {
                         VStack(spacing: 0) {
                             Spacer(minLength: 0)
-                            VStack(spacing: 16) {
+                            VStack(spacing: 18) {
                                 header(theme, compact: false)
                                 wideContent(theme)
                             }
-                            .frame(maxWidth: 1120)
-                            .padding(.horizontal, 24)
+                            .frame(maxWidth: 1040)
+                            .padding(.horizontal, 28)
                             Spacer(minLength: 0)
                         }
                         .frame(maxWidth: .infinity, minHeight: proxy.size.height)
@@ -144,18 +144,23 @@ struct ContentView: View {
     }
 
     private func wideContent(_ theme: AppTheme) -> some View {
-        HStack(alignment: .top, spacing: 16) {
-            SpeedHero(theme: theme, compact: false, onRateLimitTap: { showingRateLimit = true }, onTrafficLimitTap: { showingTrafficLimit = true })
-                .frame(maxWidth: .infinity)
-                .frame(height: 420)
+        VStack(spacing: 18) {
+            GeometryReader { proxy in
+                let spacing: CGFloat = 18
+                let availableWidth = proxy.size.width - spacing
+                HStack(alignment: .top, spacing: spacing) {
+                    SpeedHero(theme: theme, compact: false, onRateLimitTap: { showingRateLimit = true }, onTrafficLimitTap: { showingTrafficLimit = true })
+                        .frame(width: availableWidth * 0.55, height: 388)
 
-            VStack(spacing: 16) {
-                ControlDeck(theme: theme, compact: false, showingRoutes: $showingRoutes, showingThreads: $showingThreads)
-                if latencyMonitor.isChecking || !latencyMonitor.results.isEmpty {
-                    RegionLatencyCard(theme: theme)
+                    ControlDeck(theme: theme, compact: false, showingRoutes: $showingRoutes, showingThreads: $showingThreads)
+                        .frame(width: availableWidth * 0.45, minHeight: 388, alignment: .top)
                 }
             }
-            .frame(maxWidth: .infinity)
+            .frame(height: 388)
+
+            if latencyMonitor.isChecking || !latencyMonitor.results.isEmpty {
+                RegionLatencyCard(theme: theme, wide: true)
+            }
         }
     }
 }
@@ -292,6 +297,7 @@ struct ControlDeck: View {
 struct RegionLatencyCard: View {
     @EnvironmentObject private var latencyMonitor: RegionLatencyMonitor
     let theme: AppTheme
+    var wide: Bool = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -313,14 +319,23 @@ struct RegionLatencyCard: View {
                     .foregroundStyle(theme.muted.color)
                     .frame(maxWidth: .infinity, alignment: .leading)
             } else if !latencyMonitor.results.isEmpty {
-                VStack(spacing: 10) {
-                    ForEach(latencyMonitor.results) { result in
-                        LatencyResultRow(result: result, theme: theme)
+                if wide {
+                    HStack(spacing: 12) {
+                        ForEach(latencyMonitor.results) { result in
+                            LatencyResultRow(result: result, theme: theme)
+                                .frame(maxWidth: .infinity)
+                        }
+                    }
+                } else {
+                    VStack(spacing: 10) {
+                        ForEach(latencyMonitor.results) { result in
+                            LatencyResultRow(result: result, theme: theme)
+                        }
                     }
                 }
             }
         }
-        .padding(18)
+        .padding(wide ? 20 : 18)
         .background(RoundedRectangle(cornerRadius: 22, style: .continuous).fill(theme.surface.color).overlay(RoundedRectangle(cornerRadius: 22, style: .continuous).stroke(theme.line.color)))
     }
 }
