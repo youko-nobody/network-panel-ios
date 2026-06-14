@@ -8,15 +8,15 @@
 推送版本标签：
 
 ```powershell
-git tag v0.1.15
+git tag v0.1.16
 git push origin main
-git push origin v0.1.15
+git push origin v0.1.16
 ```
 
 Actions 会上传：
 
 ```text
-network-panel-ios-v0.1.15-unsigned.ipa
+network-panel-ios-v0.1.16-unsigned.ipa
 ```
 
 ## 后续自动签名

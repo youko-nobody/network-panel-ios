@@ -13,6 +13,7 @@ struct ContentView: View {
         let theme = store.currentTheme
         GeometryReader { proxy in
             let wideLayout = proxy.size.width >= 760
+            let phoneTopPadding = max(14, min(proxy.safeAreaInsets.top * 0.35, 24))
             NavigationStack {
                 ZStack {
                     LinearGradient(colors: [theme.backgroundTop.color, theme.backgroundBottom.color], startPoint: .top, endPoint: .bottom)
@@ -22,7 +23,7 @@ struct ContentView: View {
                         VStack(spacing: 0) {
                             Spacer(minLength: 0)
                             VStack(spacing: 16) {
-                                header(theme)
+                                header(theme, compact: false)
                                 wideContent(theme)
                             }
                             .frame(maxWidth: 1120)
@@ -32,20 +33,21 @@ struct ContentView: View {
                         .frame(maxWidth: .infinity, minHeight: proxy.size.height)
                     } else {
                         ScrollView {
-                            VStack(spacing: 16) {
-                                header(theme)
-                                VStack(spacing: 14) {
-                                    SpeedHero(theme: theme)
-                                    ControlDeck(theme: theme, showingRoutes: $showingRoutes, showingThreads: $showingThreads)
+                            VStack(spacing: 14) {
+                                header(theme, compact: true)
+                                VStack(spacing: 12) {
+                                    SpeedHero(theme: theme, compact: true)
+                                    ControlDeck(theme: theme, compact: true, showingRoutes: $showingRoutes, showingThreads: $showingThreads)
                                     if latencyMonitor.isChecking || !latencyMonitor.results.isEmpty {
                                         RegionLatencyCard(theme: theme)
                                     }
                                     ProjectLinksCard(theme: theme)
                                 }
                             }
-                            .frame(maxWidth: 560)
-                            .padding(.horizontal, 16)
-                            .padding(.bottom, 24)
+                            .frame(maxWidth: 520)
+                            .padding(.horizontal, 14)
+                            .padding(.top, phoneTopPadding)
+                            .padding(.bottom, 20)
                             .frame(maxWidth: .infinity)
                         }
                     }
@@ -79,39 +81,39 @@ struct ContentView: View {
         }
     }
 
-    private func header(_ theme: AppTheme) -> some View {
+    private func header(_ theme: AppTheme, compact: Bool) -> some View {
         ViewThatFits(in: .horizontal) {
             HStack(spacing: 10) {
-                headerTitle(theme)
+                headerTitle(theme, compact: compact)
                 Spacer(minLength: 12)
-                themeSwitchButton(theme, minWidth: 152)
-                settingsButton(theme)
+                themeSwitchButton(theme, minWidth: compact ? 104 : 152, compact: compact)
+                settingsButton(theme, compact: compact)
             }
 
             VStack(spacing: 10) {
                 HStack(spacing: 10) {
-                    headerTitle(theme)
+                    headerTitle(theme, compact: compact)
                     Spacer()
-                    settingsButton(theme)
+                    settingsButton(theme, compact: compact)
                 }
                 HStack {
                     Spacer()
-                    themeSwitchButton(theme, minWidth: 168)
+                    themeSwitchButton(theme, minWidth: compact ? 132 : 168, compact: compact)
                 }
             }
         }
-        .padding(.top, 14)
+        .padding(.top, compact ? 0 : 14)
     }
 
-    private func headerTitle(_ theme: AppTheme) -> some View {
+    private func headerTitle(_ theme: AppTheme, compact: Bool) -> some View {
         Text("网络面板")
-            .font(.system(size: 30, weight: .heavy))
+            .font(.system(size: compact ? 24 : 30, weight: .heavy))
             .foregroundStyle(theme.text.color)
             .lineLimit(1)
             .minimumScaleFactor(0.8)
     }
 
-    private func themeSwitchButton(_ theme: AppTheme, minWidth: CGFloat) -> some View {
+    private func themeSwitchButton(_ theme: AppTheme, minWidth: CGFloat, compact: Bool) -> some View {
         Button(store.currentTheme.name) {
             store.cycleTheme()
         }
@@ -122,24 +124,24 @@ struct ContentView: View {
                 }
             }
         }
-        .buttonStyle(ChipButtonStyle(theme: theme, minWidth: minWidth))
+        .buttonStyle(ChipButtonStyle(theme: theme, minWidth: minWidth, minHeight: compact ? 38 : 46, fontSize: compact ? 12 : 15, horizontalPadding: compact ? 10 : 12))
     }
 
-    private func settingsButton(_ theme: AppTheme) -> some View {
+    private func settingsButton(_ theme: AppTheme, compact: Bool) -> some View {
         Button("设置") {
             showingSettings = true
         }
-        .buttonStyle(ChipButtonStyle(theme: theme, minWidth: 58))
+        .buttonStyle(ChipButtonStyle(theme: theme, minWidth: compact ? 42 : 58, minHeight: compact ? 38 : 46, fontSize: compact ? 12 : 15, horizontalPadding: compact ? 10 : 12))
     }
 
     private func wideContent(_ theme: AppTheme) -> some View {
         HStack(alignment: .top, spacing: 16) {
-            SpeedHero(theme: theme)
+            SpeedHero(theme: theme, compact: false)
                 .frame(maxWidth: .infinity)
                 .frame(height: 420)
 
             VStack(spacing: 16) {
-                ControlDeck(theme: theme, showingRoutes: $showingRoutes, showingThreads: $showingThreads)
+                ControlDeck(theme: theme, compact: false, showingRoutes: $showingRoutes, showingThreads: $showingThreads)
                 if latencyMonitor.isChecking || !latencyMonitor.results.isEmpty {
                     RegionLatencyCard(theme: theme)
                 }
@@ -154,6 +156,7 @@ struct SpeedHero: View {
     @EnvironmentObject private var store: AppStore
     @EnvironmentObject private var runner: TrafficRunner
     let theme: AppTheme
+    let compact: Bool
 
     var body: some View {
         ZStack {
@@ -162,39 +165,39 @@ struct SpeedHero: View {
                 .overlay(GridOverlay(color: theme.line.color).clipShape(RoundedRectangle(cornerRadius: 28, style: .continuous)))
                 .overlay(RoundedRectangle(cornerRadius: 28, style: .continuous).stroke(theme.line.color, lineWidth: 1))
 
-            VStack(spacing: 22) {
+            VStack(spacing: compact ? 16 : 22) {
                 HStack(alignment: .top) {
                     VStack(alignment: .leading, spacing: 10) {
                         Text("线上体感")
-                            .font(.system(size: 15, weight: .bold))
+                            .font(.system(size: compact ? 13 : 15, weight: .bold))
                             .foregroundStyle(theme.onPrimary.color)
-                            .padding(.horizontal, 16)
-                            .padding(.vertical, 8)
+                            .padding(.horizontal, compact ? 12 : 16)
+                            .padding(.vertical, compact ? 7 : 8)
                             .background(Capsule().fill(theme.secondary.color))
                         Text("频次、带宽、联通度")
-                            .font(.system(size: 13, weight: .semibold))
+                            .font(.system(size: compact ? 12 : 13, weight: .semibold))
                             .foregroundStyle(theme.muted.color)
                     }
                     Spacer()
                     Text(rateLimitText)
-                        .font(.system(size: 13, weight: .bold))
+                        .font(.system(size: compact ? 12 : 13, weight: .bold))
                         .foregroundStyle(theme.onPrimary.color)
-                        .padding(.horizontal, 16)
-                        .padding(.vertical, 9)
+                        .padding(.horizontal, compact ? 12 : 16)
+                        .padding(.vertical, compact ? 7 : 9)
                         .background(Capsule().fill(theme.primary.color))
                 }
 
                 HStack(alignment: .firstTextBaseline, spacing: 20) {
                     Text(Formatters.megabytesPerSecond(runner.bytesPerSecond))
-                        .font(.system(size: 54, weight: .heavy, design: .rounded))
+                        .font(.system(size: compact ? 42 : 54, weight: .heavy, design: .rounded))
                         .minimumScaleFactor(0.5)
                         .lineLimit(1)
                         .foregroundStyle(theme.text.color)
                     Rectangle()
                         .fill(theme.line.color)
-                        .frame(width: 1, height: 48)
+                        .frame(width: 1, height: compact ? 36 : 48)
                     Text(Formatters.megabitsPerSecond(runner.bytesPerSecond))
-                        .font(.system(size: 18, weight: .bold))
+                        .font(.system(size: compact ? 15 : 18, weight: .bold))
                         .minimumScaleFactor(0.7)
                         .lineLimit(1)
                         .foregroundStyle(theme.muted.color)
@@ -206,12 +209,12 @@ struct SpeedHero: View {
                     Rectangle().fill(theme.line.color).frame(width: 1, height: 56)
                     MetricValue(title: "本次", value: Formatters.bytes(runner.sessionBytes), theme: theme)
                 }
-                .padding(.vertical, 14)
+                .padding(.vertical, compact ? 10 : 14)
                 .background(RoundedRectangle(cornerRadius: 22, style: .continuous).fill(theme.surface.color).overlay(RoundedRectangle(cornerRadius: 22, style: .continuous).stroke(theme.line.color)))
             }
-            .padding(20)
+            .padding(compact ? 18 : 20)
         }
-        .frame(minHeight: 340)
+        .frame(minHeight: compact ? 280 : 340)
     }
 
     private var rateLimitText: String {
@@ -223,29 +226,30 @@ struct ControlDeck: View {
     @EnvironmentObject private var store: AppStore
     @EnvironmentObject private var runner: TrafficRunner
     let theme: AppTheme
+    let compact: Bool
     @Binding var showingRoutes: Bool
     @Binding var showingThreads: Bool
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 14) {
+        VStack(alignment: .leading, spacing: compact ? 12 : 14) {
             HStack {
                 Text("控制台")
-                    .font(.system(size: 22, weight: .heavy))
+                    .font(.system(size: compact ? 20 : 22, weight: .heavy))
                     .foregroundStyle(theme.text.color)
                 Spacer()
                 Text("一键运行")
-                    .font(.system(size: 13, weight: .bold))
+                    .font(.system(size: compact ? 12 : 13, weight: .bold))
                     .foregroundStyle(theme.onPrimary.color)
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 8)
+                    .padding(.horizontal, compact ? 12 : 16)
+                    .padding(.vertical, compact ? 7 : 8)
                     .background(Capsule().fill(theme.secondary.color))
             }
 
             HStack(spacing: 12) {
-                ControlTile(title: "线路", value: store.selectedRoute?.displayName ?? "暂无线路", action: "选择", theme: theme) {
+                ControlTile(title: "线路", value: store.selectedRoute?.displayName ?? "暂无线路", action: "选择", theme: theme, compact: compact) {
                     showingRoutes = true
                 }
-                ControlTile(title: "线程", value: "\(store.threadCount) 线程", action: "设置", theme: theme) {
+                ControlTile(title: "线程", value: "\(store.threadCount) 线程", action: "设置", theme: theme, compact: compact) {
                     showingThreads = true
                 }
             }
@@ -258,12 +262,12 @@ struct ControlDeck: View {
                 }
             } label: {
                 Text(runner.isRunning ? "暂停" : "开始")
-                    .font(.system(size: 24, weight: .heavy))
-                    .frame(maxWidth: .infinity, minHeight: 72)
+                    .font(.system(size: compact ? 22 : 24, weight: .heavy))
+                    .frame(maxWidth: .infinity, minHeight: compact ? 62 : 72)
             }
             .buttonStyle(RunButtonStyle(theme: theme, running: runner.isRunning))
         }
-        .padding(18)
+        .padding(compact ? 16 : 18)
         .background(RoundedRectangle(cornerRadius: 24, style: .continuous).fill(theme.surfaceAlt.color).overlay(RoundedRectangle(cornerRadius: 24, style: .continuous).stroke(theme.line.color)))
     }
 }
@@ -395,32 +399,33 @@ struct ControlTile: View {
     let value: String
     let action: String
     let theme: AppTheme
+    let compact: Bool
     let onTap: () -> Void
 
     var body: some View {
         Button(action: onTap) {
-            VStack(alignment: .leading, spacing: 18) {
+            VStack(alignment: .leading, spacing: compact ? 14 : 18) {
                 HStack {
                     Text(title)
-                        .font(.system(size: 15, weight: .bold))
+                        .font(.system(size: compact ? 13 : 15, weight: .bold))
                         .foregroundStyle(theme.muted.color)
                     Spacer()
                     Text(action)
-                        .font(.system(size: 13, weight: .bold))
+                        .font(.system(size: compact ? 12 : 13, weight: .bold))
                         .foregroundStyle(theme.onPrimary.color)
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 6)
+                        .padding(.horizontal, compact ? 10 : 12)
+                        .padding(.vertical, compact ? 5 : 6)
                         .background(Capsule().fill(theme.primary.color))
                 }
                 Text(value)
-                    .font(.system(size: 26, weight: .heavy))
+                    .font(.system(size: compact ? 22 : 26, weight: .heavy))
                     .foregroundStyle(theme.text.color)
                     .frame(maxWidth: .infinity)
                     .lineLimit(1)
                     .minimumScaleFactor(0.55)
             }
-            .padding(18)
-            .frame(maxWidth: .infinity, minHeight: 132)
+            .padding(compact ? 14 : 18)
+            .frame(maxWidth: .infinity, minHeight: compact ? 112 : 132)
             .background(RoundedRectangle(cornerRadius: 22, style: .continuous).fill(theme.surface.color).overlay(RoundedRectangle(cornerRadius: 22, style: .continuous).stroke(theme.line.color)))
         }
         .buttonStyle(.plain)
