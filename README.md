@@ -19,6 +19,11 @@
 
 在 GitHub Release 中下载最新的 `network-panel-ios-*-unsigned.ipa` 文件，然后使用你自己的自签或侧载工具签名安装。
 
+## 相关项目
+
+- Android 项目：[youko-nobody/network-panel](https://github.com/youko-nobody/network-panel)
+- iOS 项目：[youko-nobody/network-panel-ios](https://github.com/youko-nobody/network-panel-ios)
+
 ## 构建说明
 
 项目使用 XcodeGen 生成 Xcode 工程，并通过 GitHub Actions 在 macOS 环境中构建。
