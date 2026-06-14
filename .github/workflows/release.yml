@@ -63,26 +63,45 @@ jobs:
           cp -R "$APP_PATH" Payload/
           zip -r network-panel-ios-${{ github.ref_name }}-unsigned.ipa Payload
 
+      - name: Prepare release notes
+        shell: bash
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          if [ -f CHANGELOG.md ]; then
+            awk -v version="$VERSION" '
+              $0 ~ "^## " version " - " { capture=1; next }
+              capture && /^## / { exit }
+              capture { print }
+            ' CHANGELOG.md > release-notes-body.md
+          else
+            : > release-notes-body.md
+          fi
+          {
+            echo "## 网络面板 iOS ${GITHUB_REF_NAME}"
+            echo
+            echo "### 更新内容"
+            echo
+            if [ -s release-notes-body.md ]; then
+              cat release-notes-body.md
+            else
+              echo "- 本版本包含稳定性与体验优化。"
+            fi
+            echo
+            echo "### 下载"
+            echo
+            echo "点击下方 \`network-panel-ios-${GITHUB_REF_NAME}-unsigned.ipa\` 下载未签名 IPA。"
+            echo
+            echo "### 安装说明"
+            echo
+            echo "这是未签名 IPA，请使用你自己的自签或侧载工具签名后安装到 iPhone / iPad。"
+          } > release-notes.md
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           files: network-panel-ios-${{ github.ref_name }}-unsigned.ipa
           name: 网络面板 iOS ${{ github.ref_name }}
-          body: |
-            网络面板 iPhone / iPad 原生 SwiftUI 网络工具。
-
-            主要功能：
-            - 实时显示 MB/s 与 Mbps
-            - 统计累计用量和本次会话用量
-            - 管理测试线路与并发线程
-            - 支持速率上限设置
-            - 检测地区延迟与连接质量
-            - 支持多主题、iPad 横屏、分屏和多窗口
-
-            下载文件：
-            - network-panel-ios-${{ github.ref_name }}-unsigned.ipa
-
-            这是未签名 IPA，请使用你自己的自签或侧载工具签名后安装到 iPhone / iPad。
+          body_path: release-notes.md
 
       - name: Upload xcodebuild log
         if: always()
