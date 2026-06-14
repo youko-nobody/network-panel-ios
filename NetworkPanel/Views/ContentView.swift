@@ -152,7 +152,7 @@ struct ContentView: View {
 
                 ControlDeck(theme: theme, compact: false, showingRoutes: $showingRoutes, showingThreads: $showingThreads)
                     .frame(maxWidth: 460)
-                    .frame(minHeight: 388, alignment: .top)
+                    .frame(height: 388, alignment: .top)
             }
             .frame(maxWidth: .infinity)
 
@@ -286,7 +286,12 @@ struct ControlDeck: View {
                     .frame(maxWidth: .infinity, minHeight: compact ? 62 : 72)
             }
             .buttonStyle(RunButtonStyle(theme: theme, running: runner.isRunning))
+
+            if !compact {
+                Spacer(minLength: 0)
+            }
         }
+        .frame(maxHeight: .infinity, alignment: .top)
         .padding(compact ? 16 : 18)
         .background(RoundedRectangle(cornerRadius: 24, style: .continuous).fill(theme.surfaceAlt.color).overlay(RoundedRectangle(cornerRadius: 24, style: .continuous).stroke(theme.line.color)))
     }
@@ -318,12 +323,7 @@ struct RegionLatencyCard: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
             } else if !latencyMonitor.results.isEmpty {
                 if wide {
-                    HStack(spacing: 12) {
-                        ForEach(latencyMonitor.results) { result in
-                            LatencyResultRow(result: result, theme: theme)
-                                .frame(maxWidth: .infinity)
-                        }
-                    }
+                    WideLatencyStrip(results: latencyMonitor.results, theme: theme)
                 } else {
                     VStack(spacing: 10) {
                         ForEach(latencyMonitor.results) { result in
@@ -335,6 +335,36 @@ struct RegionLatencyCard: View {
         }
         .padding(wide ? 20 : 18)
         .background(RoundedRectangle(cornerRadius: 22, style: .continuous).fill(theme.surface.color).overlay(RoundedRectangle(cornerRadius: 22, style: .continuous).stroke(theme.line.color)))
+    }
+}
+
+struct WideLatencyStrip: View {
+    let results: [RegionLatencyResult]
+    let theme: AppTheme
+
+    var body: some View {
+        HStack(spacing: 12) {
+            ForEach(results) { result in
+                HStack(spacing: 12) {
+                    Text(result.label)
+                        .font(.system(size: 15, weight: .heavy))
+                        .foregroundStyle(theme.text.color)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.68)
+                    Spacer(minLength: 10)
+                    Text("\(result.latencyMillis)ms")
+                        .font(.system(size: 14, weight: .heavy, design: .rounded))
+                        .foregroundStyle(theme.success.color)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 6)
+                        .background(Capsule().fill(theme.success.color.opacity(0.14)).overlay(Capsule().stroke(theme.success.color.opacity(0.35))))
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 12)
+                .frame(maxWidth: .infinity)
+                .background(RoundedRectangle(cornerRadius: 18, style: .continuous).fill(theme.chip.color).overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).stroke(theme.line.color)))
+            }
+        }
     }
 }
 
