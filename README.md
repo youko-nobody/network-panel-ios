@@ -15,6 +15,22 @@
 - 后台音频模式：运行时启用音频后台能力，用于提高息屏或切后台后的持续可用性。
 - GitHub Actions 构建：推送版本标签后自动生成未签名 IPA，方便自签和侧载。
 
+## 界面预览
+
+<p>
+  <img src="docs/images/iphone-light.jpg" alt="网络面板 iPhone 浅色主题" width="280">
+  <img src="docs/images/iphone-compact.jpg" alt="网络面板 iPhone 紧凑布局" width="280">
+  <img src="docs/images/android-home.jpg" alt="网络面板 Android 首页" width="280">
+</p>
+
+<p>
+  <img src="docs/images/ipad-light-landscape.jpg" alt="网络面板 iPad 横屏浅色主题" width="760">
+</p>
+
+<p>
+  <img src="docs/images/ipad-dark-landscape.jpg" alt="网络面板 iPad 横屏深色主题" width="760">
+</p>
+
 ## 下载安装
 
 在 GitHub Release 中下载最新的 `network-panel-ios-*-unsigned.ipa` 文件，然后使用你自己的自签或侧载工具签名安装。
