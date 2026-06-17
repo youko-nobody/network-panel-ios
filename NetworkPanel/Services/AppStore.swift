@@ -49,9 +49,15 @@ final class AppStore: ObservableObject {
     @Published var totalBytes: Int64 = 0 {
         didSet { UserDefaults.standard.set(totalBytes, forKey: Keys.totalBytes) }
     }
+    @Published private var themeMinuteTick: Int = 0
 
     var currentTheme: AppTheme {
-        AppTheme.all.first { $0.id == selectedThemeID } ?? AppTheme.all[0]
+        _ = themeMinuteTick
+        return AppTheme.resolved(id: selectedThemeID)
+    }
+
+    var selectedThemeName: String {
+        AppTheme.all.first { $0.id == selectedThemeID }?.name ?? AppTheme.all[0].name
     }
 
     var selectedRoute: TrafficRoute? {
@@ -63,6 +69,11 @@ final class AppStore: ObservableObject {
 
     init() {
         load()
+    }
+
+    func refreshDynamicTheme() {
+        guard selectedThemeID == AppTheme.timeflowID else { return }
+        themeMinuteTick += 1
     }
 
     func cycleTheme() {

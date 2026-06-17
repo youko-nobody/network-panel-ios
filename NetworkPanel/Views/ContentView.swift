@@ -123,7 +123,7 @@ struct ContentView: View {
     }
 
     private func themeSwitchButton(_ theme: AppTheme, minWidth: CGFloat, compact: Bool) -> some View {
-        Button(store.currentTheme.name) {
+        Button(store.selectedThemeName) {
             store.cycleTheme()
         }
         .contextMenu {
