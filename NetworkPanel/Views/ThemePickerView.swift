@@ -25,7 +25,7 @@ struct ThemePickerView: View {
                                         Text(option.name)
                                             .font(.system(size: 17, weight: .heavy))
                                             .foregroundStyle(theme.text.color)
-                                        Text(option.id == AppTheme.timeflowID ? "随本地时间自动流转" : (option.dark ? "深色专业风" : "浅色清爽风"))
+                                        Text(option.id == AppTheme.timeflowID ? "24 小时逐时自动流转" : (option.dark ? "深色专业风" : "浅色清爽风"))
                                             .font(.system(size: 13, weight: .semibold))
                                             .foregroundStyle(theme.muted.color)
                                     }

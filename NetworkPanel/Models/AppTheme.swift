@@ -52,45 +52,64 @@ struct AppTheme: Identifiable, Codable, Equatable {
     }
 
     static func timeflowSlot(date: Date = Date()) -> Int {
-        let hour = Calendar.current.component(.hour, from: date)
-        if hour >= 4 && hour < 6 { return 0 }
-        if hour >= 6 && hour < 8 { return 1 }
-        if hour >= 8 && hour < 10 { return 2 }
-        if hour >= 10 && hour < 12 { return 3 }
-        if hour >= 12 && hour < 13 { return 4 }
-        if hour >= 13 && hour < 16 { return 5 }
-        if hour >= 16 && hour < 18 { return 6 }
-        if hour >= 18 && hour < 20 { return 7 }
-        if hour >= 20 && hour < 22 { return 8 }
-        if hour >= 22 { return 9 }
-        return 10
+        return Calendar.current.component(.hour, from: date)
     }
 
     static func timeflowTheme(date: Date = Date()) -> AppTheme {
         switch timeflowSlot(date: date) {
         case 0:
-            return AppTheme(id: timeflowID, name: "黎明", dark: true, backgroundTop: "#111827", backgroundBottom: "#1E2540", surface: "#20283A", surfaceAlt: "#263046", text: "#EEF2FF", muted: "#B8C0D9", primary: "#AEB7FF", secondary: "#F0A7B8", success: "#88D0C5", danger: "#F49AB2", line: "#343E5A", chip: "#2A334B", heroStart: "#252B4B", heroEnd: "#332543", primaryStart: "#AEB7FF", primaryEnd: "#F0A7B8", onPrimary: "#F6F7FF")
+            return timeflowPalette("子夜", true, "#020617", "#08111F", "#0B1220", "#111827", "#E2E8F0", "#94A3B8", "#818CF8", "#38BDF8", "#5EEAD4", "#FB7185", "#1E293B", "#111C2E", "#111D34", "#050B16", "#818CF8", "#38BDF8", "#F8FAFC")
         case 1:
-            return AppTheme(id: timeflowID, name: "日出", dark: false, backgroundTop: "#FFF3E6", backgroundBottom: "#FFE0B8", surface: "#FFF9F1", surfaceAlt: "#FFF2E2", text: "#30231B", muted: "#806452", primary: "#E88945", secondary: "#FFB36B", success: "#6FA46A", danger: "#C65F4C", line: "#E8CFB5", chip: "#FFF4E8", heroStart: "#FFE8BF", heroEnd: "#FFD194", primaryStart: "#FFB36B", primaryEnd: "#E88945", onPrimary: "#FFFFFF")
+            return timeflowPalette("星河", true, "#05051A", "#101335", "#12172B", "#1A2140", "#EEF2FF", "#A5B4FC", "#A78BFA", "#60A5FA", "#67E8F9", "#F472B6", "#2A315C", "#1C2448", "#1C2454", "#090B24", "#A78BFA", "#60A5FA", "#F8FAFC")
         case 2:
-            return AppTheme(id: timeflowID, name: "清晨", dark: false, backgroundTop: "#EEF8EC", backgroundBottom: "#DCEFD8", surface: "#FBFFF8", surfaceAlt: "#F2FAEF", text: "#203020", muted: "#62745B", primary: "#77A96B", secondary: "#A7C987", success: "#4FA66F", danger: "#C7655C", line: "#D7E9D2", chip: "#F1FAEE", heroStart: "#E5F5DF", heroEnd: "#D7EECF", primaryStart: "#A7C987", primaryEnd: "#77A96B", onPrimary: "#FFFFFF")
+            return timeflowPalette("静夜", true, "#06101F", "#0D1B2A", "#111B2A", "#17263A", "#E8F3FF", "#9CB3C9", "#4F7BFF", "#22D3EE", "#65D6B6", "#F1798E", "#253A52", "#17283A", "#162C46", "#0B1526", "#4F7BFF", "#22D3EE", "#F6FBFF")
         case 3:
-            return AppTheme(id: timeflowID, name: "上午", dark: false, backgroundTop: "#EAF7FF", backgroundBottom: "#D5ECFF", surface: "#FFFFFF", surfaceAlt: "#F1F9FF", text: "#163047", muted: "#5A7891", primary: "#3D9CEB", secondary: "#7BC7FF", success: "#2FAE8C", danger: "#D95B68", line: "#C9E1F2", chip: "#EDF8FF", heroStart: "#DCF2FF", heroEnd: "#BFE6FF", primaryStart: "#7BC7FF", primaryEnd: "#3D9CEB", onPrimary: "#FFFFFF")
+            return timeflowPalette("月隐", true, "#030712", "#111827", "#101827", "#1A2436", "#DDE7F5", "#94A3B8", "#9CA3AF", "#60A5FA", "#67D6B6", "#E4819B", "#273449", "#121C2C", "#0F1A2B", "#08111F", "#9CA3AF", "#60A5FA", "#F2F6FF")
         case 4:
-            return AppTheme(id: timeflowID, name: "正午", dark: false, backgroundTop: "#FFFBE8", backgroundBottom: "#EAF6FF", surface: "#FFFFFF", surfaceAlt: "#FBFCF4", text: "#252A32", muted: "#72746B", primary: "#E5B94E", secondary: "#58A6FF", success: "#46A56D", danger: "#D96B59", line: "#E8DFC2", chip: "#FFF9DE", heroStart: "#FFF5C9", heroEnd: "#DFF2FF", primaryStart: "#E5B94E", primaryEnd: "#58A6FF", onPrimary: "#FFFFFF")
+            return timeflowPalette("破晓", true, "#141827", "#2B2444", "#20283A", "#2B3348", "#F3EEFF", "#C4B5FD", "#C4B5FD", "#F0A7B8", "#88D0C5", "#F49AB2", "#453D63", "#2A334B", "#252B4B", "#332543", "#C4B5FD", "#F0A7B8", "#F8F7FF")
         case 5:
-            return AppTheme(id: timeflowID, name: "午后", dark: false, backgroundTop: "#FFF1DD", backgroundBottom: "#F6D6B1", surface: "#FFF9F2", surfaceAlt: "#FDF0E2", text: "#34251A", muted: "#80624C", primary: "#D98242", secondary: "#B96A3C", success: "#698F55", danger: "#B85B49", line: "#E6CFB8", chip: "#FFF3E6", heroStart: "#FFE6BD", heroEnd: "#F3C999", primaryStart: "#D98242", primaryEnd: "#B96A3C", onPrimary: "#FFFDF8")
+            return timeflowPalette("黎明", true, "#111827", "#2D2744", "#20283A", "#263046", "#EEF2FF", "#B8C0D9", "#AEB7FF", "#F0A7B8", "#88D0C5", "#F49AB2", "#343E5A", "#2A334B", "#252B4B", "#332543", "#AEB7FF", "#F0A7B8", "#F6F7FF")
         case 6:
-            return AppTheme(id: timeflowID, name: "黄昏", dark: true, backgroundTop: "#21192B", backgroundBottom: "#3A2238", surface: "#2B2335", surfaceAlt: "#342A3E", text: "#FFF1E8", muted: "#D5B9C6", primary: "#D99A73", secondary: "#A98BFF", success: "#7ED4B5", danger: "#F27A92", line: "#463750", chip: "#372B42", heroStart: "#3E2B44", heroEnd: "#2A1F3B", primaryStart: "#D99A73", primaryEnd: "#A98BFF", onPrimary: "#FFF8F2")
+            return timeflowPalette("日出", false, "#FFF1E6", "#FFD5A8", "#FFF8F0", "#FFF0DC", "#30231B", "#806452", "#E88945", "#FFB36B", "#6FA46A", "#C65F4C", "#E8CFB5", "#FFF4E8", "#FFE8BF", "#FFD194", "#FFB36B", "#E88945", "#FFFFFF")
         case 7:
-            return AppTheme(id: timeflowID, name: "暮光", dark: true, backgroundTop: "#121A33", backgroundBottom: "#27204A", surface: "#1D2540", surfaceAlt: "#26304D", text: "#EEF3FF", muted: "#AEB8D8", primary: "#7FA6FF", secondary: "#C38CFF", success: "#72D5C7", danger: "#F1859F", line: "#344063", chip: "#273352", heroStart: "#22305A", heroEnd: "#2C234D", primaryStart: "#7FA6FF", primaryEnd: "#C38CFF", onPrimary: "#F5F8FF")
+            return timeflowPalette("晨光", false, "#FFF7D6", "#DDF8E9", "#FFFFF8", "#F2FAEF", "#27301F", "#6D7454", "#D9A441", "#82B86E", "#4FA66F", "#C7655C", "#E4E3BE", "#FFF9DE", "#FFF3BC", "#DCF4D0", "#D9A441", "#82B86E", "#FFFFFF")
         case 8:
-            return AppTheme(id: timeflowID, name: "夜晚", dark: true, backgroundTop: "#08111F", backgroundBottom: "#101D30", surface: "#111C2A", surfaceAlt: "#172436", text: "#E8F3FF", muted: "#9BB2C9", primary: "#5EA8FF", secondary: "#7DD3FC", success: "#65D6B6", danger: "#F1798E", line: "#24364B", chip: "#17283A", heroStart: "#162C46", heroEnd: "#0F1B2E", primaryStart: "#5EA8FF", primaryEnd: "#7DD3FC", onPrimary: "#F6FBFF")
+            return timeflowPalette("清晨", false, "#EEF8EC", "#DCEFD8", "#FBFFF8", "#F2FAEF", "#203020", "#62745B", "#77A96B", "#A7C987", "#4FA66F", "#C7655C", "#D7E9D2", "#F1FAEE", "#E5F5DF", "#D7EECF", "#A7C987", "#77A96B", "#FFFFFF")
         case 9:
-            return AppTheme(id: timeflowID, name: "深夜", dark: true, backgroundTop: "#050914", backgroundBottom: "#0B1220", surface: "#101827", surfaceAlt: "#151F31", text: "#E6EDFF", muted: "#9CA9C0", primary: "#4F7BFF", secondary: "#5AD7FF", success: "#63D2B0", danger: "#ED7F9B", line: "#202B40", chip: "#151E2D", heroStart: "#111D34", heroEnd: "#08101E", primaryStart: "#4F7BFF", primaryEnd: "#5AD7FF", onPrimary: "#F5F8FF")
+            return timeflowPalette("青晨", false, "#EAFBF4", "#D8F1E8", "#FFFFFF", "#F0FBF7", "#14342F", "#557872", "#14B8A6", "#8DD8C5", "#2FAE8C", "#D95B68", "#C6E9E0", "#E8F9F7", "#D7F4EC", "#C4EFE5", "#14B8A6", "#66C7B4", "#FFFFFF")
+        case 10:
+            return timeflowPalette("晴空", false, "#EAF7FF", "#D5ECFF", "#FFFFFF", "#F1F9FF", "#163047", "#5A7891", "#3D9CEB", "#7BC7FF", "#2FAE8C", "#D95B68", "#C9E1F2", "#EDF8FF", "#DCF2FF", "#BFE6FF", "#7BC7FF", "#3D9CEB", "#FFFFFF")
+        case 11:
+            return timeflowPalette("明昼", false, "#E6F4FF", "#FFFCEB", "#FFFFFF", "#F8FCFF", "#1E293B", "#64748B", "#0EA5E9", "#FACC15", "#22C55E", "#EF4444", "#D7E7F2", "#F0F9FF", "#DFF4FF", "#FFF5B8", "#0EA5E9", "#FACC15", "#FFFFFF")
+        case 12:
+            return timeflowPalette("正午", false, "#FFFBE8", "#EAF6FF", "#FFFFFF", "#FBFCF4", "#252A32", "#72746B", "#E5B94E", "#58A6FF", "#46A56D", "#D96B59", "#E8DFC2", "#FFF9DE", "#FFF5C9", "#DFF2FF", "#E5B94E", "#58A6FF", "#FFFFFF")
+        case 13:
+            return timeflowPalette("金午", false, "#FFF4D6", "#FFE1A8", "#FFF9F0", "#FFF1DE", "#332819", "#82653F", "#F59E0B", "#EAB308", "#65A30D", "#DC2626", "#EAD3A7", "#FFF6DE", "#FFE8A3", "#FFD27A", "#F59E0B", "#D97706", "#FFFFFF")
+        case 14:
+            return timeflowPalette("午后", false, "#FFF1DD", "#F6D6B1", "#FFF9F2", "#FDF0E2", "#34251A", "#80624C", "#D98242", "#B96A3C", "#698F55", "#B85B49", "#E6CFB8", "#FFF3E6", "#FFE6BD", "#F3C999", "#D98242", "#B96A3C", "#FFFDF8")
+        case 15:
+            return timeflowPalette("暖阳", false, "#FFE9D6", "#F8C9A2", "#FFF8F1", "#FCEADA", "#392418", "#865B42", "#EA7A3D", "#C45635", "#6B8E50", "#B94E46", "#E7C8B1", "#FFF0E4", "#FFD7B8", "#F2B486", "#EA7A3D", "#9F4A2E", "#FFFDF8")
+        case 16:
+            return timeflowPalette("斜阳", false, "#FFE2D2", "#DDB7D5", "#FFF5F2", "#F7E5EA", "#35202B", "#7D5B6A", "#C75F5F", "#B06FD3", "#6FA06F", "#B84F5A", "#E1C4CE", "#FFF0F2", "#FFD0C4", "#E3B3DF", "#C75F5F", "#9A5AD0", "#FFFFFF")
+        case 17:
+            return timeflowPalette("黄昏", true, "#21192B", "#3A2238", "#2B2335", "#342A3E", "#FFF1E8", "#D5B9C6", "#D99A73", "#A98BFF", "#7ED4B5", "#F27A92", "#463750", "#372B42", "#3E2B44", "#2A1F3B", "#D99A73", "#A98BFF", "#FFF8F2")
+        case 18:
+            return timeflowPalette("暮光", true, "#121A33", "#27204A", "#1D2540", "#26304D", "#EEF3FF", "#AEB8D8", "#7FA6FF", "#C38CFF", "#72D5C7", "#F1859F", "#344063", "#273352", "#22305A", "#2C234D", "#7FA6FF", "#C38CFF", "#F5F8FF")
+        case 19:
+            return timeflowPalette("蓝暮", true, "#0B1530", "#1C2855", "#162142", "#212E55", "#EEF3FF", "#A8B8E8", "#5B8CFF", "#9B8CFF", "#5EEAD4", "#F1859F", "#31406D", "#202B50", "#1A2A58", "#211D4D", "#5B8CFF", "#9B8CFF", "#F5F8FF")
+        case 20:
+            return timeflowPalette("夜蓝", true, "#08111F", "#101D30", "#111C2A", "#172436", "#E8F3FF", "#9BB2C9", "#5EA8FF", "#7DD3FC", "#65D6B6", "#F1798E", "#24364B", "#17283A", "#162C46", "#0F1B2E", "#5EA8FF", "#7DD3FC", "#F6FBFF")
+        case 21:
+            return timeflowPalette("深蓝", true, "#050B18", "#0B1A2E", "#0E1828", "#142338", "#E6F0FF", "#8EA7C3", "#2563EB", "#38BDF8", "#63D2B0", "#ED7F9B", "#1C3148", "#132238", "#102846", "#071426", "#2563EB", "#38BDF8", "#F5F8FF")
+        case 22:
+            return timeflowPalette("深夜", true, "#050914", "#0B1220", "#101827", "#151F31", "#E6EDFF", "#9CA9C0", "#4F7BFF", "#5AD7FF", "#63D2B0", "#ED7F9B", "#202B40", "#151E2D", "#111D34", "#08101E", "#4F7BFF", "#5AD7FF", "#F5F8FF")
         default:
-            return AppTheme(id: timeflowID, name: "午夜", dark: true, backgroundTop: "#030712", backgroundBottom: "#08101C", surface: "#0E1624", surfaceAlt: "#121C2C", text: "#DDE7F5", muted: "#909EB0", primary: "#9CA3AF", secondary: "#60A5FA", success: "#67D6B6", danger: "#E4819B", line: "#1E293B", chip: "#121C2C", heroStart: "#0F1A2B", heroEnd: "#08111F", primaryStart: "#9CA3AF", primaryEnd: "#60A5FA", onPrimary: "#F2F6FF")
+            return timeflowPalette("午夜", true, "#030712", "#08101C", "#0E1624", "#121C2C", "#DDE7F5", "#909EB0", "#9CA3AF", "#60A5FA", "#67D6B6", "#E4819B", "#1E293B", "#121C2C", "#0F1A2B", "#08111F", "#9CA3AF", "#60A5FA", "#F2F6FF")
         }
+    }
+
+    private static func timeflowPalette(_ name: String, _ dark: Bool, _ backgroundTop: String, _ backgroundBottom: String, _ surface: String, _ surfaceAlt: String, _ text: String, _ muted: String, _ primary: String, _ secondary: String, _ success: String, _ danger: String, _ line: String, _ chip: String, _ heroStart: String, _ heroEnd: String, _ primaryStart: String, _ primaryEnd: String, _ onPrimary: String) -> AppTheme {
+        AppTheme(id: timeflowID, name: name, dark: dark, backgroundTop: backgroundTop, backgroundBottom: backgroundBottom, surface: surface, surfaceAlt: surfaceAlt, text: text, muted: muted, primary: primary, secondary: secondary, success: success, danger: danger, line: line, chip: chip, heroStart: heroStart, heroEnd: heroEnd, primaryStart: primaryStart, primaryEnd: primaryEnd, onPrimary: onPrimary)
     }
 
     init(id: String, name: String, dark: Bool, backgroundTop: String, backgroundBottom: String, surface: String, surfaceAlt: String, text: String, muted: String, primary: String, secondary: String, success: String, danger: String, line: String, chip: String, heroStart: String, heroEnd: String, primaryStart: String, primaryEnd: String, onPrimary: String) {
