@@ -3,6 +3,7 @@ import UIKit
 
 struct RoutePickerView: View {
     @EnvironmentObject private var store: AppStore
+    @EnvironmentObject private var runner: TrafficRunner
     @Environment(\.dismiss) private var dismiss
     @State private var showingAdd = false
     @State private var showingImport = false
@@ -18,6 +19,7 @@ struct RoutePickerView: View {
                     ForEach(store.routes) { route in
                         Button {
                             store.select(route: route)
+                            runner.switchRoute(to: route, store: store)
                             dismiss()
                         } label: {
                             VStack(alignment: .leading, spacing: 6) {
@@ -46,7 +48,15 @@ struct RoutePickerView: View {
                             }
                             .tint(theme.primary.color)
                             Button(role: .destructive) {
+                                let deletingSelectedRoute = route.id == store.selectedRouteID
                                 store.deleteRoute(route)
+                                if deletingSelectedRoute {
+                                    if let route = store.selectedRoute {
+                                        runner.switchRoute(to: route, store: store)
+                                    } else {
+                                        runner.pause()
+                                    }
+                                }
                             } label: {
                                 Text("删除")
                             }
@@ -70,6 +80,7 @@ struct RoutePickerView: View {
             .sheet(isPresented: $showingAdd) {
                 RouteEditorView()
                     .environmentObject(store)
+                    .environmentObject(runner)
             }
             .sheet(isPresented: $showingImport) {
                 RouteImportView()
@@ -78,6 +89,7 @@ struct RoutePickerView: View {
             .sheet(item: $editingRoute) { route in
                 RouteEditorView(route: route)
                     .environmentObject(store)
+                    .environmentObject(runner)
             }
         }
     }
@@ -165,6 +177,7 @@ struct RouteImportView: View {
 
 struct RouteEditorView: View {
     @EnvironmentObject private var store: AppStore
+    @EnvironmentObject private var runner: TrafficRunner
     @Environment(\.dismiss) private var dismiss
     let route: TrafficRoute?
     @State private var name = ""
@@ -199,8 +212,12 @@ struct RouteEditorView: View {
                             updatedRoute.name = name
                             updatedRoute.url = url
                             store.updateRoute(updatedRoute)
+                            if store.selectedRouteID == updatedRoute.id {
+                                runner.switchRoute(to: updatedRoute, store: store)
+                            }
                         } else {
-                            store.addRoute(name: name, url: url)
+                            let newRoute = store.addRoute(name: name, url: url)
+                            runner.switchRoute(to: newRoute, store: store)
                         }
                         dismiss()
                     }

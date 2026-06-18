@@ -67,6 +67,7 @@ struct ContentView: View {
                 .sheet(isPresented: $showingRoutes) {
                     RoutePickerView()
                         .environmentObject(store)
+                        .environmentObject(runner)
                 }
                 .sheet(isPresented: $showingThreads) {
                     ThreadSettingsView()

@@ -16,6 +16,7 @@ final class TrafficRunner: ObservableObject {
     private var rateWindowBytes: Int64 = 0
     private var rateWindowStart = Date()
     private weak var store: AppStore?
+    private var workerGeneration = 0
 
     func start(route: TrafficRoute, store: AppStore) {
         guard !isRunning else { return }
@@ -30,14 +31,7 @@ final class TrafficRunner: ObservableObject {
         rateWindowBytes = 0
         rateWindowStart = Date()
 
-        let workerCount = store.enhancedConcurrency ? store.threadCount : 1
-        for _ in 0..<max(1, workerCount) {
-            let task = Task.detached(priority: .utility) { [weak self] in
-                guard let self else { return }
-                await self.runWorker(route: route)
-            }
-            tasks.append(task)
-        }
+        launchWorkers(route: route, store: store)
 
         rateTask = Task { [weak self] in
             while !(Task.isCancelled) {
@@ -47,10 +41,27 @@ final class TrafficRunner: ObservableObject {
         }
     }
 
+    func switchRoute(to route: TrafficRoute, store: AppStore) {
+        self.store = store
+        guard isRunning else { return }
+
+        statusText = "运行中"
+        tasks.forEach { $0.cancel() }
+        tasks.removeAll()
+        bytesPerSecond = 0
+        lastRateBytes = sessionBytes
+        lastRateTime = Date()
+        rateWindowBytes = 0
+        rateWindowStart = Date()
+
+        launchWorkers(route: route, store: store)
+    }
+
     func pause() {
         guard isRunning else { return }
         statusText = "已暂停"
         isRunning = false
+        workerGeneration += 1
         tasks.forEach { $0.cancel() }
         tasks.removeAll()
         rateTask?.cancel()
@@ -67,17 +78,45 @@ final class TrafficRunner: ObservableObject {
         lastRateTime = Date()
     }
 
-    private nonisolated func runWorker(route: TrafficRoute) async {
-        await MainActor.run {
+    private func launchWorkers(route: TrafficRoute, store: AppStore) {
+        workerGeneration += 1
+        activeWorkers = 0
+        let generation = workerGeneration
+        let workerCount = store.enhancedConcurrency ? store.threadCount : 1
+        for _ in 0..<max(1, workerCount) {
+            let task = Task.detached(priority: .utility) { [weak self] in
+                guard let self else { return }
+                await self.runWorker(route: route, generation: generation)
+            }
+            tasks.append(task)
+        }
+    }
+
+    private nonisolated func runWorker(route: TrafficRoute, generation: Int) async {
+        let canRun = await MainActor.run { () -> Bool in
+            guard self.isRunning, self.workerGeneration == generation else { return false }
             self.activeWorkers += 1
+            return true
+        }
+        guard canRun else {
+            return
         }
         defer {
             Task { @MainActor in
-                self.activeWorkers = max(0, self.activeWorkers - 1)
+                if self.workerGeneration == generation {
+                    self.activeWorkers = max(0, self.activeWorkers - 1)
+                }
             }
         }
 
         while !Task.isCancelled {
+            let stillCurrent = await MainActor.run {
+                self.isRunning && self.workerGeneration == generation
+            }
+            guard stillCurrent else {
+                break
+            }
+
             guard let url = URL(string: route.normalizedURL + cacheBuster(route.normalizedURL)) else {
                 try? await Task.sleep(nanoseconds: 700_000_000)
                 continue
@@ -95,16 +134,16 @@ final class TrafficRunner: ObservableObject {
                     if Task.isCancelled { break }
                     localCount += 1
                     if localCount >= 32_768 {
-                        await addBytes(localCount)
-                        if let delay = await rateLimitDelay(bytes: localCount), delay > 0 {
+                        await addBytes(localCount, generation: generation)
+                        if let delay = await rateLimitDelay(bytes: localCount, generation: generation), delay > 0 {
                             try? await Task.sleep(nanoseconds: UInt64(delay * 1_000_000_000))
                         }
                         localCount = 0
                     }
                 }
                 if localCount > 0 {
-                    await addBytes(localCount)
-                    if let delay = await rateLimitDelay(bytes: localCount), delay > 0 {
+                    await addBytes(localCount, generation: generation)
+                    if let delay = await rateLimitDelay(bytes: localCount, generation: generation), delay > 0 {
                         try? await Task.sleep(nanoseconds: UInt64(delay * 1_000_000_000))
                     }
                 }
@@ -115,8 +154,8 @@ final class TrafficRunner: ObservableObject {
     }
 
     @MainActor
-    private func addBytes(_ bytes: Int64) {
-        guard isRunning, bytes > 0 else { return }
+    private func addBytes(_ bytes: Int64, generation: Int) {
+        guard isRunning, workerGeneration == generation, bytes > 0 else { return }
         if let limit = store?.trafficLimitBytes, limit > 0 {
             let remaining = limit - sessionBytes
             guard remaining > 0 else {
@@ -138,8 +177,9 @@ final class TrafficRunner: ObservableObject {
     }
 
     @MainActor
-    private func rateLimitDelay(bytes: Int64) -> TimeInterval? {
+    private func rateLimitDelay(bytes: Int64, generation: Int) -> TimeInterval? {
         guard isRunning,
+              workerGeneration == generation,
               bytes > 0,
               let rateLimitMbps = store?.rateLimitMbps,
               rateLimitMbps > 0 else {

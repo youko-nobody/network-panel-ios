@@ -83,12 +83,16 @@ final class AppStore: ObservableObject {
 
     func select(route: TrafficRoute) {
         selectedRouteID = route.id
+        threadCount = Self.clampedThreads(route.threads)
     }
 
-    func addRoute(name: String, url: String) {
+    @discardableResult
+    func addRoute(name: String, url: String) -> TrafficRoute {
         let route = TrafficRoute(name: name, url: url)
         routes.append(route)
         selectedRouteID = route.id
+        threadCount = Self.clampedThreads(route.threads)
+        return route
     }
 
     func importRoutes(from rawText: String) -> RouteImportResult {
@@ -166,6 +170,9 @@ final class AppStore: ObservableObject {
         routes.removeAll { $0.id == route.id }
         if selectedRouteID == route.id {
             selectedRouteID = routes.first?.id
+            if let route = selectedRoute {
+                threadCount = Self.clampedThreads(route.threads)
+            }
         }
     }
 
