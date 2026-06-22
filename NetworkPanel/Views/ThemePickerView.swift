@@ -25,7 +25,7 @@ struct ThemePickerView: View {
                                         Text(option.name)
                                             .font(.system(size: 17, weight: .heavy))
                                             .foregroundStyle(theme.text.color)
-                                        Text(option.id == AppTheme.timeflowID ? "24 小时逐时自动流转" : (option.dark ? "深色专业风" : "浅色清爽风"))
+                                        Text(themeDescription(option))
                                             .font(.system(size: 13, weight: .semibold))
                                             .foregroundStyle(theme.muted.color)
                                     }
@@ -51,5 +51,15 @@ struct ThemePickerView: View {
                 }
             }
         }
+    }
+
+    private func themeDescription(_ option: AppTheme) -> String {
+        if option.id == AppTheme.timeflowID {
+            return "24 小时逐时自动流转"
+        }
+        if AppTheme.isTimeflowFixed(id: option.id) {
+            return "固定使用该小时配色，不随时间变化"
+        }
+        return option.dark ? "深色专业风" : "浅色清爽风"
     }
 }

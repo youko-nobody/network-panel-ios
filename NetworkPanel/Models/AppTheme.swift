@@ -1,10 +1,12 @@
+import Foundation
 import SwiftUI
 
 struct AppTheme: Identifiable, Codable, Equatable {
     static let timeflowID = "timeflow"
+    static let timeflowFixedPrefix = "timeflow-fixed-"
 
-    let id: String
-    let name: String
+    var id: String
+    var name: String
     let dark: Bool
     let backgroundTop: ColorValue
     let backgroundBottom: ColorValue
@@ -42,13 +44,20 @@ struct AppTheme: Identifiable, Codable, Equatable {
         AppTheme(id: "mist", name: "雾蓝灰", dark: true, backgroundTop: "#0C1117", backgroundBottom: "#111720", surface: "#151B22", surfaceAlt: "#1A212A", text: "#EAF0F6", muted: "#A9B9C7", primary: "#8DB8D8", secondary: "#9DB3CA", success: "#4BB7A7", danger: "#DC6B77", line: "#27323E", chip: "#17202A", heroStart: "#18212B", heroEnd: "#10161C", primaryStart: "#8DB8D8", primaryEnd: "#A5C9E6", onPrimary: "#F5FAFE"),
         AppTheme(id: "wine", name: "酒红黑", dark: true, backgroundTop: "#10090B", backgroundBottom: "#161013", surface: "#1A1214", surfaceAlt: "#20171A", text: "#F3E7EA", muted: "#B79BA5", primary: "#D46B7A", secondary: "#A58AA0", success: "#C96C7E", danger: "#E58C8C", line: "#2F2328", chip: "#22181D", heroStart: "#27171B", heroEnd: "#140E11", primaryStart: "#D46B7A", primaryEnd: "#C05F6C", onPrimary: "#FAF0F2"),
         AppTheme(id: timeflowID, name: "时景流转", dark: true, backgroundTop: "#121A33", backgroundBottom: "#27204A", surface: "#1D2540", surfaceAlt: "#26304D", text: "#EEF3FF", muted: "#AEB8D8", primary: "#7FA6FF", secondary: "#C38CFF", success: "#72D5C7", danger: "#F1859F", line: "#344063", chip: "#273352", heroStart: "#22305A", heroEnd: "#2C234D", primaryStart: "#7FA6FF", primaryEnd: "#C38CFF", onPrimary: "#F5F8FF")
-    ]
+    ] + timeflowFixedOptions
 
     static func resolved(id: String, date: Date = Date()) -> AppTheme {
         if id == timeflowID {
             return timeflowTheme(date: date)
         }
+        if let slot = timeflowFixedSlot(id: id) {
+            return timeflowTheme(slot: slot)
+        }
         return all.first { $0.id == id } ?? all[0]
+    }
+
+    static func isTimeflowFixed(id: String) -> Bool {
+        timeflowFixedSlot(id: id) != nil
     }
 
     static func timeflowSlot(date: Date = Date()) -> Int {
@@ -56,7 +65,11 @@ struct AppTheme: Identifiable, Codable, Equatable {
     }
 
     static func timeflowTheme(date: Date = Date()) -> AppTheme {
-        switch timeflowSlot(date: date) {
+        return timeflowTheme(slot: timeflowSlot(date: date))
+    }
+
+    static func timeflowTheme(slot: Int) -> AppTheme {
+        switch slot {
         case 0:
             return timeflowPalette("子夜", true, "#020617", "#08111F", "#0B1220", "#111827", "#E2E8F0", "#94A3B8", "#818CF8", "#38BDF8", "#5EEAD4", "#FB7185", "#1E293B", "#111C2E", "#111D34", "#050B16", "#818CF8", "#38BDF8", "#F8FAFC")
         case 1:
@@ -110,6 +123,30 @@ struct AppTheme: Identifiable, Codable, Equatable {
 
     private static func timeflowPalette(_ name: String, _ dark: Bool, _ backgroundTop: String, _ backgroundBottom: String, _ surface: String, _ surfaceAlt: String, _ text: String, _ muted: String, _ primary: String, _ secondary: String, _ success: String, _ danger: String, _ line: String, _ chip: String, _ heroStart: String, _ heroEnd: String, _ primaryStart: String, _ primaryEnd: String, _ onPrimary: String) -> AppTheme {
         AppTheme(id: timeflowID, name: name, dark: dark, backgroundTop: backgroundTop, backgroundBottom: backgroundBottom, surface: surface, surfaceAlt: surfaceAlt, text: text, muted: muted, primary: primary, secondary: secondary, success: success, danger: danger, line: line, chip: chip, heroStart: heroStart, heroEnd: heroEnd, primaryStart: primaryStart, primaryEnd: primaryEnd, onPrimary: onPrimary)
+    }
+
+    private static var timeflowFixedOptions: [AppTheme] {
+        (0..<24).map { slot in
+            var theme = timeflowTheme(slot: slot)
+            theme.id = timeflowFixedID(slot)
+            theme.name = timeflowFixedName(slot)
+            return theme
+        }
+    }
+
+    private static func timeflowFixedID(_ slot: Int) -> String {
+        "\(timeflowFixedPrefix)\(String(format: "%02d", slot))"
+    }
+
+    private static func timeflowFixedSlot(id: String) -> Int? {
+        guard id.hasPrefix(timeflowFixedPrefix) else { return nil }
+        let raw = String(id.dropFirst(timeflowFixedPrefix.count))
+        guard let slot = Int(raw), slot >= 0, slot < 24 else { return nil }
+        return slot
+    }
+
+    private static func timeflowFixedName(_ slot: Int) -> String {
+        "时景 \(String(format: "%02d", slot)) \(timeflowTheme(slot: slot).name)"
     }
 
     init(id: String, name: String, dark: Bool, backgroundTop: String, backgroundBottom: String, surface: String, surfaceAlt: String, text: String, muted: String, primary: String, secondary: String, success: String, danger: String, line: String, chip: String, heroStart: String, heroEnd: String, primaryStart: String, primaryEnd: String, onPrimary: String) {
