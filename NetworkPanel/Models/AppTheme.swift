@@ -60,6 +60,14 @@ struct AppTheme: Identifiable, Codable, Equatable {
         timeflowFixedSlot(id: id) != nil
     }
 
+    static var primaryOptions: [AppTheme] {
+        all.filter { !isTimeflowFixed(id: $0.id) }
+    }
+
+    static var fixedTimeflowOptions: [AppTheme] {
+        timeflowFixedOptions
+    }
+
     static func timeflowSlot(date: Date = Date()) -> Int {
         return Calendar.current.component(.hour, from: date)
     }

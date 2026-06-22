@@ -128,9 +128,16 @@ struct ContentView: View {
             store.cycleTheme()
         }
         .contextMenu {
-            ForEach(AppTheme.all) { option in
+            ForEach(AppTheme.primaryOptions) { option in
                 Button(option.name) {
                     store.selectedThemeID = option.id
+                }
+            }
+            Menu("时景手动") {
+                ForEach(AppTheme.fixedTimeflowOptions) { option in
+                    Button(option.name) {
+                        store.selectedThemeID = option.id
+                    }
                 }
             }
         }

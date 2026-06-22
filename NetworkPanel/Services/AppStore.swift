@@ -77,8 +77,9 @@ final class AppStore: ObservableObject {
     }
 
     func cycleTheme() {
-        let currentIndex = AppTheme.all.firstIndex { $0.id == selectedThemeID } ?? 0
-        selectedThemeID = AppTheme.all[(currentIndex + 1) % AppTheme.all.count].id
+        let options = AppTheme.primaryOptions
+        let currentIndex = options.firstIndex { $0.id == selectedThemeID } ?? -1
+        selectedThemeID = options[(currentIndex + 1) % options.count].id
     }
 
     func select(route: TrafficRoute) {
