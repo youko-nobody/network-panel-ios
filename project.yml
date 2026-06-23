@@ -30,6 +30,8 @@ targets:
           - 2
         UIBackgroundModes:
           - audio
+        NSAppTransportSecurity:
+          NSAllowsArbitraryLoads: true
         UIRequiresFullScreen: false
         UISupportedInterfaceOrientations:
           - UIInterfaceOrientationPortrait
