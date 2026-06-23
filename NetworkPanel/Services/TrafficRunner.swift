@@ -1,6 +1,10 @@
 import Foundation
 import Combine
 
+private enum RunnerRequestError: Error {
+    case httpStatus(Int)
+}
+
 @MainActor
 final class TrafficRunner: ObservableObject {
     @Published private(set) var isRunning = false
@@ -117,39 +121,84 @@ final class TrafficRunner: ObservableObject {
                 break
             }
 
-            guard let url = URL(string: route.normalizedURL + cacheBuster(route.normalizedURL)) else {
+            let urls = requestCandidates(for: route)
+            guard !urls.isEmpty else {
                 try? await Task.sleep(nanoseconds: 700_000_000)
                 continue
             }
 
-            do {
-                var request = URLRequest(url: url)
-                request.cachePolicy = .reloadIgnoringLocalAndRemoteCacheData
-                request.timeoutInterval = 12
-                request.setValue("no-cache", forHTTPHeaderField: "Cache-Control")
-                request.setValue("identity", forHTTPHeaderField: "Accept-Encoding")
-                let (bytes, _) = try await URLSession.shared.bytes(for: request)
-                var localCount: Int64 = 0
-                for try await _ in bytes {
-                    if Task.isCancelled { break }
-                    localCount += 1
-                    if localCount >= 32_768 {
-                        await addBytes(localCount, generation: generation)
-                        if let delay = await rateLimitDelay(bytes: localCount, generation: generation), delay > 0 {
-                            try? await Task.sleep(nanoseconds: UInt64(delay * 1_000_000_000))
-                        }
-                        localCount = 0
+            var receivedBytes = false
+            var lastError: Error?
+            for url in urls {
+                do {
+                    let count = try await downloadOnce(from: url, generation: generation)
+                    if count > 0 {
+                        receivedBytes = true
+                        break
                     }
+                } catch {
+                    lastError = error
                 }
-                if localCount > 0 {
-                    await addBytes(localCount, generation: generation)
-                    if let delay = await rateLimitDelay(bytes: localCount, generation: generation), delay > 0 {
-                        try? await Task.sleep(nanoseconds: UInt64(delay * 1_000_000_000))
-                    }
-                }
-            } catch {
+            }
+            if !receivedBytes {
+                await updateRequestFailure(lastError, route: route, generation: generation)
                 try? await Task.sleep(nanoseconds: 700_000_000)
             }
+        }
+    }
+
+    private nonisolated func downloadOnce(from url: URL, generation: Int) async throws -> Int64 {
+        var request = URLRequest(url: url)
+        request.cachePolicy = .reloadIgnoringLocalAndRemoteCacheData
+        request.timeoutInterval = 12
+        request.setValue("no-cache, no-store, max-age=0", forHTTPHeaderField: "Cache-Control")
+        request.setValue("identity", forHTTPHeaderField: "Accept-Encoding")
+        request.setValue("*/*", forHTTPHeaderField: "Accept")
+        request.setValue("NetworkPanel/1.0", forHTTPHeaderField: "User-Agent")
+
+        let (bytes, response) = try await URLSession.shared.bytes(for: request)
+        if let httpResponse = response as? HTTPURLResponse,
+           !(200..<400).contains(httpResponse.statusCode) {
+            throw RunnerRequestError.httpStatus(httpResponse.statusCode)
+        }
+
+        var totalCount: Int64 = 0
+        var localCount: Int64 = 0
+        for try await _ in bytes {
+            if Task.isCancelled { break }
+            localCount += 1
+            if localCount >= 32_768 {
+                totalCount += localCount
+                await addBytes(localCount, generation: generation)
+                if let delay = await rateLimitDelay(bytes: localCount, generation: generation), delay > 0 {
+                    try? await Task.sleep(nanoseconds: UInt64(delay * 1_000_000_000))
+                }
+                localCount = 0
+                let stillCurrent = await MainActor.run {
+                    self.isRunning && self.workerGeneration == generation
+                }
+                if !stillCurrent {
+                    break
+                }
+            }
+        }
+        if localCount > 0 {
+            totalCount += localCount
+            await addBytes(localCount, generation: generation)
+            if let delay = await rateLimitDelay(bytes: localCount, generation: generation), delay > 0 {
+                try? await Task.sleep(nanoseconds: UInt64(delay * 1_000_000_000))
+            }
+        }
+        return totalCount
+    }
+
+    @MainActor
+    private func updateRequestFailure(_ error: Error?, route: TrafficRoute, generation: Int) {
+        guard isRunning, workerGeneration == generation else { return }
+        guard let runnerError = error as? RunnerRequestError else { return }
+        switch runnerError {
+        case .httpStatus(let code):
+            statusText = "\(route.displayName) HTTP \(code)"
         }
     }
 
@@ -215,5 +264,17 @@ final class TrafficRunner: ObservableObject {
     private nonisolated func cacheBuster(_ url: String) -> String {
         let join = url.contains("?") ? "&" : "?"
         return "\(join)np_t=\(Int(Date().timeIntervalSince1970 * 1000))_\(UUID().uuidString)"
+    }
+
+    private nonisolated func requestCandidates(for route: TrafficRoute) -> [URL] {
+        let normalized = route.normalizedURL
+        var urls: [URL] = []
+        if let cacheBusted = URL(string: normalized + cacheBuster(normalized)) {
+            urls.append(cacheBusted)
+        }
+        if let original = URL(string: normalized), !urls.contains(original) {
+            urls.append(original)
+        }
+        return urls
     }
 }

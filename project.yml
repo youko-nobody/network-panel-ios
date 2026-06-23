@@ -6,8 +6,8 @@ settings:
     SWIFT_VERSION: 5.0
     IPHONEOS_DEPLOYMENT_TARGET: 16.0
     PRODUCT_BUNDLE_IDENTIFIER: cn.netart.networkpanel.ios
-    MARKETING_VERSION: 0.1.31
-    CURRENT_PROJECT_VERSION: 32
+    MARKETING_VERSION: 0.1.32
+    CURRENT_PROJECT_VERSION: 33
 targets:
   NetworkPanel:
     type: application
