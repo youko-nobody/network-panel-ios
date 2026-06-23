@@ -4,14 +4,12 @@ struct TrafficRoute: Identifiable, Codable, Equatable, Sendable {
     var id: UUID
     var name: String
     var url: String
-    var threads: Int
     var enabled: Bool
 
-    init(id: UUID = UUID(), name: String, url: String, threads: Int = 4, enabled: Bool = true) {
+    init(id: UUID = UUID(), name: String, url: String, enabled: Bool = true) {
         self.id = id
         self.name = name
         self.url = url
-        self.threads = max(1, min(64, threads))
         self.enabled = enabled
     }
 

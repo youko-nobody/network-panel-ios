@@ -33,7 +33,7 @@ struct RoutePickerView: View {
                                             .foregroundStyle(theme.primary.color)
                                     }
                                 }
-                                Text("\(route.threads) 线程 · \(route.normalizedURL)")
+                                Text(route.normalizedURL)
                                     .font(.system(size: 12, weight: .semibold))
                                     .foregroundStyle(theme.muted.color)
                                     .lineLimit(1)

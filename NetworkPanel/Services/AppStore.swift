@@ -21,8 +21,7 @@ final class AppStore: ObservableObject {
     private static let urlTrimCharacters = CharacterSet(charactersIn: "\"'()[]<>.,;，。；")
     private static let defaultRoute = TrafficRoute(
         name: "移动云盘",
-        url: "https://yun.mcloud.139.com/hongseyunpan/2.43G.zip",
-        threads: 4
+        url: "https://yun.mcloud.139.com/hongseyunpan/2.43G.zip"
     )
 
     @Published var routes: [TrafficRoute] = [] {
@@ -84,7 +83,6 @@ final class AppStore: ObservableObject {
 
     func select(route: TrafficRoute) {
         selectedRouteID = route.id
-        threadCount = Self.clampedThreads(route.threads)
     }
 
     @discardableResult
@@ -92,7 +90,6 @@ final class AppStore: ObservableObject {
         let route = TrafficRoute(name: name, url: url)
         routes.append(route)
         selectedRouteID = route.id
-        threadCount = Self.clampedThreads(route.threads)
         return route
     }
 
@@ -123,7 +120,7 @@ final class AppStore: ObservableObject {
                 continue
             }
 
-            let route = TrafficRoute(name: parsed.name, url: parsed.url, threads: threadCount, enabled: true)
+            let route = TrafficRoute(name: parsed.name, url: parsed.url, enabled: true)
             updatedRoutes.append(route)
             knownURLs.insert(key)
             importedFirstID = importedFirstID ?? route.id
@@ -145,35 +142,17 @@ final class AppStore: ObservableObject {
         var updatedRoutes = routes
         updatedRoutes[index] = route
         routes = updatedRoutes
-        if selectedRouteID == route.id {
-            threadCount = Self.clampedThreads(route.threads)
-        }
-    }
-
-    func updateSelectedRouteThreads(_ threads: Int) {
-        updateThreadCount(threads)
     }
 
     func updateThreadCount(_ threads: Int) {
         let clamped = Self.clampedThreads(threads)
         threadCount = clamped
-        guard let route = selectedRoute,
-              let index = routes.firstIndex(where: { $0.id == route.id }) else { return }
-        var updatedRoute = route
-        updatedRoute.threads = clamped
-        var updatedRoutes = routes
-        updatedRoutes[index] = updatedRoute
-        routes = updatedRoutes
-        selectedRouteID = updatedRoute.id
     }
 
     func deleteRoute(_ route: TrafficRoute) {
         routes.removeAll { $0.id == route.id }
         if selectedRouteID == route.id {
             selectedRouteID = routes.first?.id
-            if let route = selectedRoute {
-                threadCount = Self.clampedThreads(route.threads)
-            }
         }
     }
 
@@ -209,7 +188,7 @@ final class AppStore: ObservableObject {
         }
 
         let savedThreads = UserDefaults.standard.object(forKey: Keys.threadCount) as? Int
-        threadCount = Self.clampedThreads(savedThreads ?? selectedRoute?.threads ?? Self.defaultRoute.threads)
+        threadCount = Self.clampedThreads(savedThreads ?? 4)
     }
 
     private func saveRoutes() {
